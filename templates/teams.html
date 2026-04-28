@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Teams – WC 2026 Sweep{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-1">The Draw</h1>
+<p class="text-gray-500 text-sm mb-8">Each player's 8 countries. Badge shows the points multiplier.</p>
+
+{% if players %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+  {% for player in players %}
+  <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+    <div class="px-4 py-3 bg-gray-800 border-b border-gray-700">
+      <h2 class="font-bold text-base">{{ player.name }}</h2>
+    </div>
+    <div class="p-4 space-y-2">
+      {% for tier in [1, 2, 3, 4] %}
+        {% set tier_countries = player.countries | selectattr('tier', 'equalto', tier) | list %}
+        {% if tier_countries %}
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-600 mt-3 mb-1 first:mt-0">
+            {% if tier == 1 %}Favourite (×1.00)
+            {% elif tier == 2 %}2nd Seed (×1.25)
+            {% elif tier == 3 %}3rd Seed (×1.50)
+            {% else %}Underdog (×1.75){% endif %}
+          </div>
+          {% for country in tier_countries %}
+          <div class="flex items-center gap-2 text-sm">
+            <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded shrink-0">
+              {{ country.group_name }}
+            </span>
+            <span>{{ country.name }}</span>
+            <span class="text-gray-600 text-xs ml-auto">FIFA #{{ country.fifa_ranking }}</span>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{# ── Full group reference ── #}
+<h2 class="text-lg font-semibold mt-12 mb-4 text-gray-300">All Groups</h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+  {% for group_letter in 'ABCDEFGHIJKL' %}
+  {% set group_countries = all_countries | selectattr('group_name', 'equalto', group_letter) | sort(attribute='tier') %}
+  <div class="bg-gray-900 rounded-lg border border-gray-800 p-3">
+    <div class="text-xs font-bold text-gray-500 uppercase mb-2">Group {{ group_letter }}</div>
+    {% for country in group_countries %}
+    <div class="flex items-center gap-1.5 text-xs mb-1">
+      <span class="tier-badge-{{ country.tier }} font-bold px-1 py-0.5 rounded text-xs">T{{ country.tier }}</span>
+      <span class="{% if country.player %}text-gray-200{% else %}text-gray-600{% endif %}">{{ country.name }}</span>
+      {% if country.player %}
+      <span class="text-gray-600 ml-auto">{{ country.player.name.split()[0] }}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+  <p class="text-gray-400 text-lg mb-2">No draw yet.</p>
+  <p class="text-gray-500 text-sm">Go to <a href="/admin" class="text-emerald-400 hover:underline">Admin</a> to run the draw.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}WC 2026 Sweepstake{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <style>
+    .tier-badge-1 { background:#f59e0b; color:#1c1917; }
+    .tier-badge-2 { background:#94a3b8; color:#1c1917; }
+    .tier-badge-3 { background:#b45309; color:#fff; }
+    .tier-badge-4 { background:#4b5563; color:#fff; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
+      <span class="font-bold text-emerald-400 text-base tracking-tight">⚽ WC2026 Sweep</span>
+      <a href="/"       class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/' %}text-emerald-400{% else %}text-gray-400{% endif %}">League</a>
+      <a href="/scores" class="text-sm hover:text-emerald-400 transition-colors {% if request.path.startswith('/scores') %}text-emerald-400{% else %}text-gray-400{% endif %}">Scores</a>
+      <a href="/teams"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/teams' %}text-emerald-400{% else %}text-gray-400{% endif %}">Teams</a>
+      <a href="/admin"  class="text-sm hover:text-emerald-400 transition-colors ml-auto {% if request.path.startswith('/admin') %}text-emerald-400{% else %}text-gray-400{% endif %}">Admin</a>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium
+          {{ 'bg-emerald-900 border border-emerald-700 text-emerald-200' if category == 'success' else 'bg-red-900 border border-red-700 text-red-200' }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

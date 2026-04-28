@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Admin – WC 2026 Sweep{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">Admin</h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  {# ── Draw setup ── #}
+  <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+    <h2 class="text-lg font-semibold mb-1">Player Draw</h2>
+    <p class="text-gray-500 text-sm mb-5">Enter 6 names, then click Run Draw. Countries will be randomly assigned with 2 per tier each.</p>
+
+    <form method="post" action="/admin/draw">
+      <div class="space-y-2 mb-5">
+        {% for i in range(1, 7) %}
+        <input
+          type="text"
+          name="player{{ i }}"
+          placeholder="Player {{ i }}"
+          value="{{ players[i-1].name if players|length >= i else '' }}"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+          required />
+        {% endfor %}
+      </div>
+      <div class="flex gap-3">
+        <button type="submit"
+          class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+          Run Draw
+        </button>
+        {% if draw_done %}
+        <button type="button"
+          onclick="document.getElementById('reset-form').submit()"
+          class="bg-red-900 hover:bg-red-800 text-red-200 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+          Reset Draw
+        </button>
+        {% endif %}
+      </div>
+    </form>
+    <form id="reset-form" method="post" action="/admin/reset" class="hidden"></form>
+
+    {% if draw_done %}
+    <div class="mt-6 space-y-1.5">
+      {% for player in players %}
+      <div class="text-sm">
+        <span class="font-medium">{{ player.name }}</span>
+        <span class="text-gray-500 ml-2">
+          {% for country in player.countries | sort(attribute='tier') %}
+            <span class="tier-badge-{{ country.tier }} text-xs px-1 rounded mx-0.5">{{ country.name }}</span>
+          {% endfor %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── API / data ── #}
+  <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+    <h2 class="text-lg font-semibold mb-1">Live Data</h2>
+    <p class="text-gray-500 text-sm mb-5">
+      The scores page auto-fetches every 60 s. Use this button to trigger a manual refresh or to test your API key.
+      Register for a free key at
+      <a href="https://www.football-data.org/client/register" target="_blank" class="text-emerald-400 hover:underline">football-data.org</a>.
+    </p>
+    <p class="text-sm text-gray-400 mb-5">
+      Add <code class="bg-gray-800 px-1 rounded text-emerald-300">FOOTBALL_DATA_API_KEY=your_key</code>
+      to the <code class="bg-gray-800 px-1 rounded">.env</code> file, then restart the app.
+    </p>
+    <form method="post" action="/admin/refresh">
+      <button type="submit"
+        class="bg-blue-700 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+        Refresh Match Data
+      </button>
+    </form>
+  </div>
+
+</div>
+
+{# ── Points reference ── #}
+<div class="mt-8 bg-gray-900 rounded-xl border border-gray-800 p-6">
+  <h2 class="text-lg font-semibold mb-4">Points Reference</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+    <div>
+      <h3 class="text-gray-400 font-medium mb-2">Tier Multipliers</h3>
+      <table class="w-full text-sm">
+        <tr class="border-b border-gray-800"><td class="py-1"><span class="tier-badge-1 text-xs px-1.5 rounded">T1</span> Favourite</td><td class="text-right text-gray-300">× 1.00</td></tr>
+        <tr class="border-b border-gray-800"><td class="py-1"><span class="tier-badge-2 text-xs px-1.5 rounded">T2</span> 2nd Seed</td><td class="text-right text-gray-300">× 1.25</td></tr>
+        <tr class="border-b border-gray-800"><td class="py-1"><span class="tier-badge-3 text-xs px-1.5 rounded">T3</span> 3rd Seed</td><td class="text-right text-gray-300">× 1.50</td></tr>
+        <tr>                                 <td class="py-1"><span class="tier-badge-4 text-xs px-1.5 rounded">T4</span> Underdog</td><td class="text-right text-gray-300">× 1.75</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="text-gray-400 font-medium mb-2">Knockout Stage Bonuses</h3>
+      <table class="w-full text-sm">
+        <tr class="border-b border-gray-800"><td class="py-1 text-gray-300">Round of 32</td><td class="text-right text-emerald-400">+1</td></tr>
+        <tr class="border-b border-gray-800"><td class="py-1 text-gray-300">Round of 16</td><td class="text-right text-emerald-400">+2</td></tr>
+        <tr class="border-b border-gray-800"><td class="py-1 text-gray-300">Quarter-Final</td><td class="text-right text-emerald-400">+3</td></tr>
+        <tr class="border-b border-gray-800"><td class="py-1 text-gray-300">Semi-Final</td><td class="text-right text-emerald-400">+4</td></tr>
+        <tr>                                 <td class="py-1 text-gray-300">3rd Place / Final</td><td class="text-right text-emerald-400">+5</td></tr>
+      </table>
+      <p class="text-xs text-gray-600 mt-2">Bonus added to points earned by winning. No draw points in knockout rounds.</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,82 @@
+{% macro team_cell(country, team_name) %}
+  <div class="text-center">
+    <div class="font-semibold text-sm">{{ team_name }}</div>
+    {% if country and country.player %}
+    <div class="text-xs text-gray-500 mt-0.5">{{ country.player.name }}</div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro score_cell(match) %}
+  {% if match.status in ('IN_PLAY', 'PAUSED') %}
+    <div class="text-2xl font-bold text-emerald-400 tabular-nums">{{ match.home_score }} – {{ match.away_score }}</div>
+    <div class="text-xs text-emerald-500 mt-0.5">{{ 'HT' if match.status == 'PAUSED' else 'LIVE' }}</div>
+  {% elif match.status == 'FINISHED' %}
+    <div class="text-2xl font-bold text-gray-100 tabular-nums">{{ match.home_score }} – {{ match.away_score }}</div>
+    <div class="text-xs text-gray-600 mt-0.5">FT</div>
+  {% else %}
+    {% if match.kickoff %}
+    <div class="text-sm text-gray-400">{{ match.kickoff.strftime('%d %b %H:%M') }}</div>
+    {% else %}
+    <div class="text-sm text-gray-600">TBC</div>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% macro match_card(match) %}
+<div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-3">
+  <div class="flex-1">{{ team_cell(match.home_country, match.home_team_name) }}</div>
+  <div class="w-28 text-center flex flex-col items-center">
+    {{ score_cell(match) }}
+    <div class="text-xs text-gray-600 mt-1">{{ stage_labels.get(match.stage, match.stage) }}</div>
+    {% if match.group_name %}<div class="text-xs text-gray-700">Group {{ match.group_name }}</div>{% endif %}
+  </div>
+  <div class="flex-1">{{ team_cell(match.away_country, match.away_team_name) }}</div>
+</div>
+{% endmacro %}
+
+
+{# ── Live ── #}
+{% if live %}
+<section class="mb-8">
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span> Live Now
+  </h2>
+  <div class="space-y-2">
+    {% for m in live %}{{ match_card(m) }}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── Upcoming ── #}
+{% if upcoming %}
+<section class="mb-8">
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">Upcoming</h2>
+  <div class="space-y-2">
+    {% for m in upcoming[:20] %}{{ match_card(m) }}{% endfor %}
+    {% if upcoming|length > 20 %}
+    <p class="text-xs text-gray-600 pl-2">+{{ upcoming|length - 20 }} more scheduled</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{# ── Results ── #}
+{% if results %}
+<section>
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">Results</h2>
+  <div class="space-y-2">
+    {% for m in results[:30] %}{{ match_card(m) }}{% endfor %}
+    {% if results|length > 30 %}
+    <p class="text-xs text-gray-600 pl-2">+{{ results|length - 30 }} earlier results</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if not live and not upcoming and not results %}
+<div class="text-center py-16 text-gray-500">
+  <p class="text-lg mb-1">No match data yet.</p>
+  <p class="text-sm">Add your API key in the <a href="/admin" class="text-emerald-400 hover:underline">Admin</a> panel and click Refresh.</p>
+</div>
+{% endif %}

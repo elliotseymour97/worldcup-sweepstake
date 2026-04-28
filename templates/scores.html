@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Scores – WC 2026 Sweep{% endblock %}
+{% block content %}
+
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold">Match Scores</h1>
+  <span class="text-gray-600 text-xs">Auto-refreshes every 60s</span>
+</div>
+
+<div id="match-data"
+     hx-get="/scores/live"
+     hx-trigger="every 60s"
+     hx-swap="innerHTML">
+  {% include '_matches_partial.html' %}
+</div>
+
+{% endblock %}
