@@ -1,0 +1,71 @@
+{% if standings %}
+
+{# ── Main standings table ── #}
+<div class="overflow-x-auto rounded-xl border border-gray-800 mb-10">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-800 bg-gray-900">
+        <th class="px-4 py-3 text-left">#</th>
+        <th class="px-4 py-3 text-left">Player</th>
+        <th class="px-4 py-3 text-center">Pts</th>
+        <th class="px-4 py-3 text-center">GF</th>
+        <th class="px-4 py-3 text-center">GA</th>
+        <th class="px-4 py-3 text-center">GD</th>
+        <th class="px-4 py-3 text-left hidden sm:table-cell">Furthest</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in standings %}
+      <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors">
+        <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
+        <td class="px-4 py-3 font-semibold">{{ row.player.name }}</td>
+        <td class="px-4 py-3 text-center font-bold text-emerald-400 text-base">{{ '%.2f'|format(row.points) }}</td>
+        <td class="px-4 py-3 text-center text-gray-300">{{ row.gf }}</td>
+        <td class="px-4 py-3 text-center text-gray-300">{{ row.ga }}</td>
+        <td class="px-4 py-3 text-center font-medium
+          {% if row.gd > 0 %}text-emerald-400{% elif row.gd < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+          {% if row.gd > 0 %}+{% endif %}{{ row.gd }}
+        </td>
+        <td class="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
+          {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
+          {{ labels[row.furthest] }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ── Per-player country cards ── #}
+<h2 class="text-lg font-semibold mb-4 text-gray-300">Country Breakdown</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {% for row in standings %}
+  <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+    <div class="flex justify-between items-baseline mb-3">
+      <h3 class="font-bold text-base">{{ row.player.name }}</h3>
+      <span class="text-emerald-400 font-bold text-sm">{{ '%.2f'|format(row.points) }} pts</span>
+    </div>
+    <div class="space-y-1.5">
+      {% for country in row.player.countries | sort(attribute='tier') %}
+      {% set stats = row.country_stats[country.id] %}
+      <div class="flex items-center justify-between text-sm">
+        <span class="flex items-center gap-2">
+          <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded">×{{ country.multiplier }}</span>
+          <span class="{% if stats.furthest == 0 %}text-gray-500{% else %}text-gray-200{% endif %}">
+            {{ country.name }}
+          </span>
+        </span>
+        <span class="text-gray-400 text-xs font-mono tabular-nums">{{ '%.2f'|format(stats.points) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+  <p class="text-gray-400 text-lg mb-2">No draw yet.</p>
+  <p class="text-gray-500 text-sm">Go to <a href="/admin" class="text-emerald-400 hover:underline">Admin</a> to add players and run the draw.</p>
+</div>
+{% endif %}
