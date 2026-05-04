@@ -20,6 +20,8 @@ STAGE_MAP = {
 
 
 def _find_country(api_name: str) -> Optional[Country]:
+    if not api_name:
+        return None
     c = Country.query.filter(
         db.func.lower(Country.api_name) == api_name.lower()
     ).first()
@@ -60,8 +62,8 @@ def fetch_and_sync() -> tuple[bool, str]:
 def _sync_matches(api_matches: list) -> None:
     for m in api_matches:
         api_id    = m.get('id')
-        home_name = m.get('homeTeam', {}).get('name', '')
-        away_name = m.get('awayTeam', {}).get('name', '')
+        home_name = m.get('homeTeam', {}).get('name') or ''
+        away_name = m.get('awayTeam', {}).get('name') or ''
         stage     = STAGE_MAP.get(m.get('stage', ''), m.get('stage', ''))
         status    = m.get('status', 'SCHEDULED')
 
