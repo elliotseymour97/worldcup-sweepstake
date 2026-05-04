@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import requests
 from datetime import datetime, timedelta
 from typing import Optional
