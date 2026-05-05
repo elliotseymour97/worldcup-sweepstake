@@ -11,4 +11,4 @@ class Config:
     FOOTBALL_DATA_API_KEY = os.environ.get('FOOTBALL_DATA_API_KEY', '')
     COMPETITION_CODE = os.environ.get('COMPETITION_CODE', 'WC')
     ADMIN_USER = os.environ.get('ADMIN_USER', 'admin')
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'GoodisonPark97!')
