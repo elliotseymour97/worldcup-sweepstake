@@ -1,5 +1,6 @@
-from datetime import date, timezone
-from flask import Blueprint, render_template
+import threading
+from datetime import date
+from flask import Blueprint, render_template, current_app
 from models import Match
 from api_client import fetch_and_sync
 from points import STAGE_LABELS
@@ -7,8 +8,16 @@ from points import STAGE_LABELS
 scores_bp = Blueprint('scores', __name__)
 
 
+def _trigger_sync():
+    app = current_app._get_current_object()
+    def _run():
+        with app.app_context():
+            fetch_and_sync()
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def _grouped_matches():
-    fetch_and_sync()
+    _trigger_sync()
     all_matches = Match.query.order_by(Match.kickoff.asc()).all()
     today = date.today()
 
