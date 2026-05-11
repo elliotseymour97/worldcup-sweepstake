@@ -1,6 +1,6 @@
 import time
-from datetime import datetime
-from flask import Blueprint, render_template, abort
+from datetime import datetime, date as _date
+from flask import Blueprint, render_template
 from sqlalchemy.orm import subqueryload, joinedload
 from models import Player, Country, Match
 from points import player_standings, country_stats, STAGE_LABELS, ROUND_ORDER
@@ -17,7 +17,7 @@ def _build_standings():
     now = time.monotonic()
     if _cache['standings'] is not None and (now - _cache['at']) < _CACHE_TTL:
         return _cache['standings']
-    standings = player_standings()
+    standings = player_standings(include_live=True)
     for row in standings:
         row['country_stats'] = {c.id: country_stats(c) for c in row['player'].countries}
     _cache['standings'] = standings
@@ -60,13 +60,28 @@ def player_detail(player_id):
         total_points += stats['points']
 
     # Last 10 finished matches across all countries
-    matches_with_country = []
+    recent = []
     for country in player.countries:
         for match in country.home_matches + country.away_matches:
             if match.status == 'FINISHED' and match.home_score is not None:
-                matches_with_country.append((match, country))
-    matches_with_country.sort(key=lambda x: x[0].kickoff or datetime.min, reverse=True)
-    recent_matches = matches_with_country[:10]
+                recent.append((match, country))
+    recent.sort(key=lambda x: x[0].kickoff or datetime.min, reverse=True)
+    recent_matches = recent[:10]
+
+    # Upcoming fixtures — deduplicated by match id
+    today = _date.today()
+    seen = set()
+    upcoming = []
+    for country in player.countries:
+        for match in country.home_matches + country.away_matches:
+            if (match.status in ('SCHEDULED', 'TIMED')
+                    and match.kickoff
+                    and match.kickoff.date() >= today
+                    and match.id not in seen):
+                seen.add(match.id)
+                upcoming.append((match, country))
+    upcoming.sort(key=lambda x: x[0].kickoff)
+    upcoming_fixtures = upcoming[:8]
 
     standings = _build_standings()
     rank = next((r['rank'] for r in standings if r['player'].id == player_id), '–')
@@ -77,6 +92,7 @@ def player_detail(player_id):
                            total_points=round(total_points, 2),
                            rank=rank,
                            recent_matches=recent_matches,
+                           upcoming_fixtures=upcoming_fixtures,
                            stage_labels=STAGE_LABELS)
 
 

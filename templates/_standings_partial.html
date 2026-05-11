@@ -1,61 +1,85 @@
 {% if standings %}
 
-{# ── Main standings table ── #}
-<div class="overflow-x-auto rounded-xl border border-gray-800 mb-10">
-  <table class="w-full text-sm">
-    <thead>
-      <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-800 bg-gray-900">
-        <th class="px-4 py-3 text-left">#</th>
-        <th class="px-4 py-3 text-left">Player</th>
-        <th class="px-4 py-3 text-center hidden sm:table-cell">P</th>
-        <th class="px-4 py-3 text-center">W</th>
-        <th class="px-4 py-3 text-center hidden sm:table-cell">D</th>
-        <th class="px-4 py-3 text-center">L</th>
-        <th class="px-4 py-3 text-center hidden sm:table-cell">GF</th>
-        <th class="px-4 py-3 text-center hidden sm:table-cell">GA</th>
-        <th class="px-4 py-3 text-center">GD</th>
-        <th class="px-4 py-3 text-center">Pts</th>
-        <th class="px-4 py-3 text-left hidden sm:table-cell">Furthest</th>
-        <th class="px-4 py-3 text-left hidden md:table-cell">Form</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in standings %}
-      <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors {% if row.rank == 1 %}bg-amber-950/30 border-l-2 border-l-amber-400{% endif %}">
-        <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
-        <td class="px-4 py-3 font-semibold">
-          <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
-        </td>
-        <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.played }}</td>
-        <td class="px-4 py-3 text-center text-emerald-400 font-medium">{{ row.wins }}</td>
-        <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.draws }}</td>
-        <td class="px-4 py-3 text-center text-red-400 font-medium">{{ row.losses }}</td>
-        <td class="px-4 py-3 text-center text-gray-300 hidden sm:table-cell">{{ row.gf }}</td>
-        <td class="px-4 py-3 text-center text-gray-300 hidden sm:table-cell">{{ row.ga }}</td>
-        <td class="px-4 py-3 text-center font-medium
-          {% if row.gd > 0 %}text-emerald-400{% elif row.gd < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
-          {% if row.gd > 0 %}+{% endif %}{{ row.gd }}
-        </td>
-        <td class="px-4 py-3 text-center font-bold text-emerald-400 text-base">{{ '%.2f'|format(row.points) }}</td>
-        <td class="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
-          {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
-          {{ labels[row.furthest] }}
-        </td>
-        <td class="px-4 py-3 hidden md:table-cell">
-          <div class="flex gap-1">
-            {% for result in row.form %}
-            <span class="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center
-              {{ 'bg-emerald-500 text-black' if result == 'W' else 'bg-gray-600 text-white' if result == 'D' else 'bg-red-500 text-white' }}">
-              {{ result }}
-            </span>
-            {% endfor %}
-            {% if not row.form %}<span class="text-gray-700 text-xs">–</span>{% endif %}
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% set any_live = standings | selectattr('has_live') | list | length > 0 %}
+{% if any_live %}
+<div class="mb-4 flex items-center gap-2 text-sm bg-amber-950/30 border border-amber-800/40 rounded-lg px-4 py-2">
+  <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block flex-shrink-0"></span>
+  <span class="text-amber-400 font-semibold">Live standings</span>
+  <span class="text-gray-500 text-xs">— amber points include in-progress matches</span>
+</div>
+{% endif %}
+
+{# ── Main standings table — always scrollable so all columns are reachable ── #}
+<div class="relative rounded-xl border border-gray-800 mb-10">
+  {# Right-fade gradient on mobile signals there are more columns to scroll to #}
+  <div class="pointer-events-none absolute right-0 top-0 h-full w-10 rounded-r-xl
+              bg-gradient-to-l from-gray-950 to-transparent z-10 sm:hidden"></div>
+  <div class="overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;">
+    <table class="w-full min-w-max text-sm">
+      <thead>
+        <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-800 bg-gray-900">
+          <th class="px-3 py-3 text-left">#</th>
+          <th class="px-3 py-3 text-left">Player</th>
+          <th class="px-3 py-3 text-center">P</th>
+          <th class="px-3 py-3 text-center">W</th>
+          <th class="px-3 py-3 text-center">D</th>
+          <th class="px-3 py-3 text-center">L</th>
+          <th class="px-3 py-3 text-center">GF</th>
+          <th class="px-3 py-3 text-center">GA</th>
+          <th class="px-3 py-3 text-center">GD</th>
+          <th class="px-3 py-3 text-center">Pts</th>
+          <th class="px-3 py-3 text-left">Furthest</th>
+          <th class="px-3 py-3 text-left">Form</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in standings %}
+        <tr class="border-b border-gray-800 hover:bg-gray-900/60 transition-colors
+          {% if row.rank == 1 %}bg-amber-950/30 border-l-2 border-l-amber-400
+          {% elif row.has_live %}border-l-2 border-l-amber-700{% endif %}">
+          <td class="px-3 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
+          <td class="px-3 py-3 font-semibold whitespace-nowrap">
+            <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
+          </td>
+          <td class="px-3 py-3 text-center text-gray-400">{{ row.played }}</td>
+          <td class="px-3 py-3 text-center text-emerald-400 font-medium">{{ row.wins }}</td>
+          <td class="px-3 py-3 text-center text-gray-400">{{ row.draws }}</td>
+          <td class="px-3 py-3 text-center text-red-400 font-medium">{{ row.losses }}</td>
+          <td class="px-3 py-3 text-center text-gray-300">{{ row.gf }}</td>
+          <td class="px-3 py-3 text-center text-gray-300">{{ row.ga }}</td>
+          <td class="px-3 py-3 text-center font-medium
+            {% if row.gd > 0 %}text-emerald-400{% elif row.gd < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+            {% if row.gd > 0 %}+{% endif %}{{ row.gd }}
+          </td>
+          <td class="px-3 py-3 text-center font-bold text-base">
+            {% if row.has_live %}
+            <span class="text-amber-400">{{ '%.2f'|format(row.points) }}</span>
+            <span class="block text-xs font-normal text-amber-700 leading-none -mt-0.5">live</span>
+            {% else %}
+            <span class="text-emerald-400">{{ '%.2f'|format(row.points) }}</span>
+            {% endif %}
+          </td>
+          <td class="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
+            {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
+            {{ labels[row.furthest] }}
+          </td>
+          <td class="px-3 py-3">
+            <div class="flex gap-1">
+              {% for result in row.form %}
+              <span class="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0
+                {{ 'bg-emerald-500 text-black' if result == 'W' else 'bg-gray-600 text-white' if result == 'D' else 'bg-red-500 text-white' }}">
+                {{ result }}
+              </span>
+              {% endfor %}
+              {% if not row.form %}<span class="text-gray-700 text-xs">–</span>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="sm:hidden text-xs text-gray-700 text-right px-3 py-1.5">← swipe for more →</p>
 </div>
 
 {# ── Per-player country cards ── #}
@@ -64,8 +88,12 @@
   {% for row in standings %}
   <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
     <div class="flex justify-between items-baseline mb-3">
-      <h3 class="font-bold text-base">{{ row.player.name }}</h3>
-      <span class="text-emerald-400 font-bold text-sm">{{ '%.2f'|format(row.points) }} pts</span>
+      <h3 class="font-bold text-base">
+        <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
+      </h3>
+      <span class="{% if row.has_live %}text-amber-400{% else %}text-emerald-400{% endif %} font-bold text-sm">
+        {{ '%.2f'|format(row.points) }} pts
+      </span>
     </div>
     <div class="space-y-1.5">
       {% for country in row.player.countries | sort(attribute='tier') %}

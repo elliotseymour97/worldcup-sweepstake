@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}League Table – WC 2026 Sweep{% endblock %}
+{% block title %}League – LM Sweepstake 2026{% endblock %}
 {% block content %}
 
 <div class="flex justify-between items-center mb-1">
   <h1 class="text-3xl font-bold">League Table</h1>
-  <span class="text-gray-600 text-xs">Auto-refreshes every 60s</span>
+  <span class="text-gray-600 text-xs">Auto-refreshes every 30s</span>
 </div>
 <p class="text-gray-500 text-sm mb-8">Points → Goal difference → Furthest stage reached</p>
 
 <div id="standings-data"
      hx-get="/league/standings"
-     hx-trigger="every 60s"
+     hx-trigger="every 30s"
      hx-swap="innerHTML">
   {% include '_standings_partial.html' %}
 </div>

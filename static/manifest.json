@@ -1,7 +1,7 @@
 {
-  "name": "WC 2026 Sweepstake",
-  "short_name": "WC2026",
-  "description": "World Cup 2026 Sweepstake tracker",
+  "name": "Lanky Munters WC Sweepstake 2026",
+  "short_name": "LM Sweep 2026",
+  "description": "Lanky Munters World Cup 2026 Sweepstake tracker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#030712",

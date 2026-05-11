@@ -34,9 +34,12 @@ STAGE_LABELS = {
 
 FURTHEST_LABELS = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final']
 
+_LIVE_STATUSES = ('IN_PLAY', 'PAUSED')
 
-def match_points_for_country(match, country):
-    if match.status != 'FINISHED':
+
+def match_points_for_country(match, country, include_live=False):
+    is_live = match.status in _LIVE_STATUSES
+    if match.status != 'FINISHED' and not (include_live and is_live):
         return 0.0
 
     is_home = (match.home_team_id == country.id)
@@ -59,38 +62,63 @@ def match_points_for_country(match, country):
     return round(base * country.multiplier + STAGE_BONUS.get(match.stage, 0), 2)
 
 
-def country_stats(country):
+def country_stats(country, include_live=False):
     gf = ga = 0
-    pts = 0.0
+    confirmed_pts = provisional_pts = 0.0
     furthest = 0
     played = wins = draws = losses = 0
+    has_live = False
 
     all_matches = country.home_matches + country.away_matches
     for match in all_matches:
-        if match.status != 'FINISHED':
+        is_live = match.status in _LIVE_STATUSES
+        is_done = match.status == 'FINISHED'
+
+        if not is_done and not (include_live and is_live):
             continue
+
         is_home = (match.home_team_id == country.id)
         scored   = match.home_score if is_home else match.away_score
         conceded = match.away_score if is_home else match.home_score
 
-        gf += scored   or 0
-        ga += conceded or 0
-        pts += match_points_for_country(match, country)
+        if scored is None or conceded is None:
+            continue
 
+        gf += scored
+        ga += conceded
+
+        match_pts = match_points_for_country(match, country, include_live=include_live)
         round_val = ROUND_ORDER.get(match.stage, 0)
         if round_val > furthest:
             furthest = round_val
 
-        played += 1
-        if scored > conceded:
-            wins += 1
-        elif scored == conceded and match.stage == 'GROUP_STAGE':
-            draws += 1
+        if is_done:
+            confirmed_pts += match_pts
+            played += 1
+            if scored > conceded:
+                wins += 1
+            elif scored == conceded and match.stage == 'GROUP_STAGE':
+                draws += 1
+            else:
+                losses += 1
         else:
-            losses += 1
+            provisional_pts += match_pts
+            has_live = True
 
-    return {'points': pts, 'gf': gf, 'ga': ga, 'furthest': furthest,
-            'played': played, 'wins': wins, 'draws': draws, 'losses': losses}
+    result = {
+        'points':  confirmed_pts + provisional_pts,
+        'gf':      gf,
+        'ga':      ga,
+        'furthest': furthest,
+        'played':  played,
+        'wins':    wins,
+        'draws':   draws,
+        'losses':  losses,
+    }
+    if include_live:
+        result['live_pts'] = provisional_pts
+        result['has_live'] = has_live
+    return result
 
 
 def _player_form(player):
@@ -115,7 +143,7 @@ def _player_form(player):
     return [r for _, r in results[:5]]
 
 
-def player_standings():
+def player_standings(include_live=False):
     players = Player.query.options(
         subqueryload(Player.countries).subqueryload(Country.home_matches),
         subqueryload(Player.countries).subqueryload(Country.away_matches),
@@ -123,23 +151,28 @@ def player_standings():
     rows = []
 
     for player in players:
-        pts = 0.0
+        pts = live_pts = 0.0
         gf = ga = furthest = 0
         played = wins = draws = losses = 0
+        has_live = False
 
         for country in player.countries:
-            stats = country_stats(country)
-            pts     += stats['points']
-            gf      += stats['gf']
-            ga      += stats['ga']
-            played  += stats['played']
-            wins    += stats['wins']
-            draws   += stats['draws']
-            losses  += stats['losses']
+            stats = country_stats(country, include_live=include_live)
+            pts    += stats['points']
+            gf     += stats['gf']
+            ga     += stats['ga']
+            played += stats['played']
+            wins   += stats['wins']
+            draws  += stats['draws']
+            losses += stats['losses']
             if stats['furthest'] > furthest:
                 furthest = stats['furthest']
+            if include_live:
+                live_pts += stats.get('live_pts', 0.0)
+                if stats.get('has_live'):
+                    has_live = True
 
-        rows.append({
+        row = {
             'player':   player,
             'points':   round(pts, 2),
             'played':   played,
@@ -151,7 +184,11 @@ def player_standings():
             'gd':       gf - ga,
             'furthest': furthest,
             'form':     _player_form(player),
-        })
+        }
+        if include_live:
+            row['live_pts'] = round(live_pts, 2)
+            row['has_live'] = has_live
+        rows.append(row)
 
     rows.sort(key=lambda x: (-x['points'], -x['gd'], -x['furthest'], x['player'].name))
     for i, row in enumerate(rows):

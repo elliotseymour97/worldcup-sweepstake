@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ player.name }} – WC 2026 Sweep{% endblock %}
+{% block title %}{{ player.name }} – LM Sweepstake 2026{% endblock %}
 {% block content %}
 
 <div class="mb-6">
@@ -59,6 +59,31 @@
     </tbody>
   </table>
 </div>
+
+{# ── Upcoming fixtures ── #}
+{% if upcoming_fixtures %}
+<h2 class="text-base font-semibold uppercase tracking-wider text-gray-400 mb-3">Upcoming Fixtures</h2>
+<div class="space-y-2 mb-10">
+  {% for match, country in upcoming_fixtures %}
+  {% set is_my_home = match.home_team_id == country.id %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-3">
+    <div class="flex-1 min-w-0 flex items-center gap-2 text-sm">
+      <span class="{{ 'text-emerald-300 font-semibold' if is_my_home else 'text-gray-300' }}">{{ match.home_team_name }}</span>
+      <span class="text-gray-600 text-xs font-medium flex-shrink-0">vs</span>
+      <span class="{{ 'text-emerald-300 font-semibold' if not is_my_home else 'text-gray-300' }}">{{ match.away_team_name }}</span>
+    </div>
+    <div class="text-right text-xs flex-shrink-0">
+      {% if match.kickoff %}
+      <time data-utc="{{ match.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-emerald-400 font-mono font-medium">
+        {{ match.kickoff.strftime('%d %b %H:%M') }}
+      </time>
+      {% endif %}
+      <div class="text-gray-600 mt-0.5">{{ stage_labels.get(match.stage, match.stage) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 {# ── Recent results ── #}
 {% if recent_matches %}

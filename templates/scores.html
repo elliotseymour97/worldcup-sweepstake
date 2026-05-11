@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Scores – WC 2026 Sweep{% endblock %}
+{% block title %}Scores – LM Sweepstake 2026{% endblock %}
 {% block content %}
 
 <div class="flex justify-between items-center mb-6">
@@ -61,8 +61,9 @@
   }
 
   function _sendAlert(body) {
+    showToast('⚽ Goal! ' + body);
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('⚽ Goal!', { body, icon: '/static/icon.svg' });
+      new Notification('⚽ Goal!', { body: body, icon: '/static/icon.svg' });
     }
   }
 
