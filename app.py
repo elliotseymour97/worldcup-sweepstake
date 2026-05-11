@@ -47,20 +47,31 @@ def _migrate_db():
 
 def _seed_countries():
     from models import Country
-    if Country.query.count() > 0:
-        return
     data_path = os.path.join(os.path.dirname(__file__), 'data', 'countries.json')
     with open(data_path, encoding='utf-8') as f:
         countries = json.load(f)
-    for c in countries:
-        db.session.add(Country(
-            name=c['name'],
-            code=c['code'],
-            api_name=c['api_name'],
-            group_name=c['group'],
-            tier=c['tier'],
-            fifa_ranking=c['fifa_ranking'],
-        ))
+
+    if Country.query.count() == 0:
+        for c in countries:
+            db.session.add(Country(
+                name=c['name'],
+                code=c['code'],
+                api_name=c['api_name'],
+                group_name=c['group'],
+                tier=c['tier'],
+                fifa_ranking=c['fifa_ranking'],
+            ))
+    else:
+        # Update metadata for existing countries by code so deployments fix stale data.
+        # player_id is intentionally not touched — draw assignments are preserved.
+        for c in countries:
+            existing = Country.query.filter_by(code=c['code']).first()
+            if existing:
+                existing.name = c['name']
+                existing.api_name = c['api_name']
+                existing.tier = c['tier']
+                existing.group_name = c['group']
+                existing.fifa_ranking = c['fifa_ranking']
     db.session.commit()
 
 

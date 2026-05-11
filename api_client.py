@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import requests
 from datetime import datetime, timedelta
 from typing import Optional
@@ -21,9 +22,15 @@ STAGE_MAP = {
 
 
 def _normalise(s: str) -> str:
+    """Collapse name variants: 'Bosnia-Herzegovina', 'Bosnia & Herzegovina',
+    'Bosnia and Herzegovina' all become 'bosnia herzegovina'."""
     if not s:
         return ''
-    return s.strip().lower().replace(' & ', ' and ').replace('&', 'and')
+    s = s.strip().lower()
+    s = s.replace('-', ' ')           # hyphen → space
+    s = s.replace('&', 'and')         # & → and
+    s = re.sub(r'\s+and\s+', ' ', s)  # " and " connector → single space
+    return re.sub(r'\s+', ' ', s).strip()
 
 
 def _find_country(api_name: str) -> Optional[Country]:

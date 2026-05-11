@@ -88,12 +88,12 @@ class TestAdminActions:
 
 class TestFindCountry:
 
-    def test_exact_api_name_match(self, db):
+    def test_hyphenated_api_name_matches(self, db):
         from api_client import _find_country
         from models import Country
         c = Country.query.filter_by(name='Bosnia & Herzegovina').first()
         assert c is not None
-        result = _find_country('Bosnia and Herzegovina')
+        result = _find_country('Bosnia-Herzegovina')  # actual football-data.org return value
         assert result is not None
         assert result.id == c.id
 
@@ -103,6 +103,15 @@ class TestFindCountry:
         c = Country.query.filter_by(name='Bosnia & Herzegovina').first()
         assert c is not None
         result = _find_country('Bosnia & Herzegovina')
+        assert result is not None
+        assert result.id == c.id
+
+    def test_and_variant_matches(self, db):
+        from api_client import _find_country
+        from models import Country
+        c = Country.query.filter_by(name='Bosnia & Herzegovina').first()
+        assert c is not None
+        result = _find_country('Bosnia and Herzegovina')
         assert result is not None
         assert result.id == c.id
 
