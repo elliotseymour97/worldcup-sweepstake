@@ -21,3 +21,8 @@ def league():
 @main_bp.route('/league/standings')
 def league_standings():
     return render_template('_standings_partial.html', standings=_build_standings())
+
+
+@main_bp.route('/rules')
+def rules():
+    return render_template('rules.html')

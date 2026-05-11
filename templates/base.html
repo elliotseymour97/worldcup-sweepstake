@@ -21,6 +21,7 @@
       <a href="/"       class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/' %}text-emerald-400{% else %}text-gray-400{% endif %}">League</a>
       <a href="/scores" class="text-sm hover:text-emerald-400 transition-colors {% if request.path.startswith('/scores') %}text-emerald-400{% else %}text-gray-400{% endif %}">Scores</a>
       <a href="/teams"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/teams' %}text-emerald-400{% else %}text-gray-400{% endif %}">Teams</a>
+      <a href="/rules"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/rules' %}text-emerald-400{% else %}text-gray-400{% endif %}">Rules</a>
       <a href="/admin"  class="text-sm hover:text-emerald-400 transition-colors ml-auto {% if request.path.startswith('/admin') %}text-emerald-400{% else %}text-gray-400{% endif %}">Admin</a>
     </div>
   </nav>

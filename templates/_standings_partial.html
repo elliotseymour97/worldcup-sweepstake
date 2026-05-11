@@ -7,10 +7,14 @@
       <tr class="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-800 bg-gray-900">
         <th class="px-4 py-3 text-left">#</th>
         <th class="px-4 py-3 text-left">Player</th>
-        <th class="px-4 py-3 text-center">Pts</th>
-        <th class="px-4 py-3 text-center">GF</th>
-        <th class="px-4 py-3 text-center">GA</th>
+        <th class="px-4 py-3 text-center hidden sm:table-cell">P</th>
+        <th class="px-4 py-3 text-center">W</th>
+        <th class="px-4 py-3 text-center hidden sm:table-cell">D</th>
+        <th class="px-4 py-3 text-center">L</th>
+        <th class="px-4 py-3 text-center hidden sm:table-cell">GF</th>
+        <th class="px-4 py-3 text-center hidden sm:table-cell">GA</th>
         <th class="px-4 py-3 text-center">GD</th>
+        <th class="px-4 py-3 text-center">Pts</th>
         <th class="px-4 py-3 text-left hidden sm:table-cell">Furthest</th>
       </tr>
     </thead>
@@ -19,13 +23,17 @@
       <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors">
         <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
         <td class="px-4 py-3 font-semibold">{{ row.player.name }}</td>
-        <td class="px-4 py-3 text-center font-bold text-emerald-400 text-base">{{ '%.2f'|format(row.points) }}</td>
-        <td class="px-4 py-3 text-center text-gray-300">{{ row.gf }}</td>
-        <td class="px-4 py-3 text-center text-gray-300">{{ row.ga }}</td>
+        <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.played }}</td>
+        <td class="px-4 py-3 text-center text-emerald-400 font-medium">{{ row.wins }}</td>
+        <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.draws }}</td>
+        <td class="px-4 py-3 text-center text-red-400 font-medium">{{ row.losses }}</td>
+        <td class="px-4 py-3 text-center text-gray-300 hidden sm:table-cell">{{ row.gf }}</td>
+        <td class="px-4 py-3 text-center text-gray-300 hidden sm:table-cell">{{ row.ga }}</td>
         <td class="px-4 py-3 text-center font-medium
           {% if row.gd > 0 %}text-emerald-400{% elif row.gd < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
           {% if row.gd > 0 %}+{% endif %}{{ row.gd }}
         </td>
+        <td class="px-4 py-3 text-center font-bold text-emerald-400 text-base">{{ '%.2f'|format(row.points) }}</td>
         <td class="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
           {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
           {{ labels[row.furthest] }}

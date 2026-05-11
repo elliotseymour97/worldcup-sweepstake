@@ -61,6 +61,7 @@ def country_stats(country):
     gf = ga = 0
     pts = 0.0
     furthest = 0
+    played = wins = draws = losses = 0
 
     all_matches = country.home_matches + country.away_matches
     for match in all_matches:
@@ -78,7 +79,16 @@ def country_stats(country):
         if round_val > furthest:
             furthest = round_val
 
-    return {'points': pts, 'gf': gf, 'ga': ga, 'furthest': furthest}
+        played += 1
+        if scored > conceded:
+            wins += 1
+        elif scored == conceded and match.stage == 'GROUP_STAGE':
+            draws += 1
+        else:
+            losses += 1
+
+    return {'points': pts, 'gf': gf, 'ga': ga, 'furthest': furthest,
+            'played': played, 'wins': wins, 'draws': draws, 'losses': losses}
 
 
 def player_standings():
@@ -88,18 +98,27 @@ def player_standings():
     for player in players:
         pts = 0.0
         gf = ga = furthest = 0
+        played = wins = draws = losses = 0
 
         for country in player.countries:
             stats = country_stats(country)
             pts     += stats['points']
             gf      += stats['gf']
             ga      += stats['ga']
+            played  += stats['played']
+            wins    += stats['wins']
+            draws   += stats['draws']
+            losses  += stats['losses']
             if stats['furthest'] > furthest:
                 furthest = stats['furthest']
 
         rows.append({
             'player':   player,
             'points':   round(pts, 2),
+            'played':   played,
+            'wins':     wins,
+            'draws':    draws,
+            'losses':   losses,
             'gf':       gf,
             'ga':       ga,
             'gd':       gf - ga,
