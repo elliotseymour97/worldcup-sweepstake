@@ -6,7 +6,7 @@
       {% else %}
         text-gray-200
       {% endif %}">
-      {{ team_name }}
+      {{ country.name if country else team_name }}
     </div>
     {% if country and country.player %}
     {% set cn = player_color(country.player.id) %}

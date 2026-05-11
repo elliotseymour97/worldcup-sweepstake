@@ -36,7 +36,7 @@
         <div class="flex-1 text-center">
           <div class="font-semibold text-sm
             {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-500' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
-            {{ m.home_team_name or 'TBD' }}
+            {{ m.home_country.name if m.home_country else m.home_team_name or 'TBD' }}
           </div>
           {% if m.home_country and m.home_country.player %}
           <div class="flex items-center justify-center gap-1 mt-1">
@@ -67,7 +67,7 @@
         <div class="flex-1 text-center">
           <div class="font-semibold text-sm
             {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-500' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
-            {{ m.away_team_name or 'TBD' }}
+            {{ m.away_country.name if m.away_country else m.away_team_name or 'TBD' }}
           </div>
           {% if m.away_country and m.away_country.player %}
           <div class="flex items-center justify-center gap-1 mt-1">

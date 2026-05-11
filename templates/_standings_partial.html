@@ -9,42 +9,48 @@
 </div>
 {% endif %}
 
-{# ── Podium ── #}
+{# ── Podium — always a horizontal row, 1st centre/tallest ── #}
 {% if standings | length >= 1 %}
-<div class="flex flex-col sm:flex-row gap-3 mb-8 items-end">
-  {# 2nd place — renders first on mobile (order-2 on sm) #}
+{% set p1 = standings[0] %}
+{% set cn1 = player_color(p1.player.id) %}
+<div class="flex gap-2 mb-8 items-end">
+
+  {# 2nd place #}
   {% if standings | length >= 2 %}
   {% set p2 = standings[1] %}
   {% set cn2 = player_color(p2.player.id) %}
-  <div class="flex-1 sm:order-1 bg-gray-900 border border-{{ cn2 }}-800/50 rounded-xl px-4 py-4 text-center">
-    <div class="text-2xl mb-1">🥈</div>
-    <div class="font-bold text-{{ cn2 }}-400 text-base">{{ p2.player.name }}</div>
-    <div class="text-gray-400 text-sm font-mono mt-0.5">{{ '%.2f'|format(p2.points) }} pts</div>
-    {% if p2.has_live %}<div class="text-xs text-amber-600 mt-0.5">live</div>{% endif %}
+  <div class="flex-1 min-w-0 bg-gray-900 border border-{{ cn2 }}-800/50 rounded-xl px-2 sm:px-4 py-4 text-center">
+    <div class="text-xl mb-1">🥈</div>
+    <div class="font-bold text-{{ cn2 }}-400 text-xs sm:text-sm truncate">{{ p2.player.name }}</div>
+    <div class="text-gray-400 text-xs font-mono mt-0.5 tabular-nums">{{ '%.1f'|format(p2.points) }}</div>
+    {% if p2.has_live %}<div class="text-xs text-amber-600">live</div>{% endif %}
   </div>
+  {% else %}
+  <div class="flex-1"></div>
   {% endif %}
 
-  {# 1st place — centre, slightly taller #}
-  {% set p1 = standings[0] %}
-  {% set cn1 = player_color(p1.player.id) %}
-  <div class="flex-1 sm:order-2 bg-gray-900 border-2 border-{{ cn1 }}-500/60 rounded-xl px-4 py-5 text-center shadow-lg shadow-{{ cn1 }}-900/20">
-    <div class="text-3xl mb-1">🏆</div>
-    <div class="font-bold text-xl text-{{ cn1 }}-400">{{ p1.player.name }}</div>
-    <div class="text-gray-200 font-bold font-mono mt-1">{{ '%.2f'|format(p1.points) }} pts</div>
-    {% if p1.has_live %}<div class="text-xs text-amber-500 mt-0.5">live</div>{% endif %}
+  {# 1st place — centre, taller #}
+  <div class="flex-1 min-w-0 bg-gray-900 border-2 border-{{ cn1 }}-500/70 rounded-xl px-2 sm:px-4 py-5 text-center">
+    <div class="text-2xl sm:text-3xl mb-1">🏆</div>
+    <div class="font-bold text-{{ cn1 }}-400 text-sm sm:text-base truncate">{{ p1.player.name }}</div>
+    <div class="text-gray-200 font-bold font-mono text-sm mt-0.5 tabular-nums">{{ '%.1f'|format(p1.points) }}</div>
+    {% if p1.has_live %}<div class="text-xs text-amber-500">live</div>{% endif %}
   </div>
 
   {# 3rd place #}
   {% if standings | length >= 3 %}
   {% set p3 = standings[2] %}
   {% set cn3 = player_color(p3.player.id) %}
-  <div class="flex-1 sm:order-3 bg-gray-900 border border-{{ cn3 }}-800/50 rounded-xl px-4 py-4 text-center">
-    <div class="text-2xl mb-1">🥉</div>
-    <div class="font-bold text-{{ cn3 }}-400 text-base">{{ p3.player.name }}</div>
-    <div class="text-gray-400 text-sm font-mono mt-0.5">{{ '%.2f'|format(p3.points) }} pts</div>
-    {% if p3.has_live %}<div class="text-xs text-amber-600 mt-0.5">live</div>{% endif %}
+  <div class="flex-1 min-w-0 bg-gray-900 border border-{{ cn3 }}-800/50 rounded-xl px-2 sm:px-4 py-4 text-center">
+    <div class="text-xl mb-1">🥉</div>
+    <div class="font-bold text-{{ cn3 }}-400 text-xs sm:text-sm truncate">{{ p3.player.name }}</div>
+    <div class="text-gray-400 text-xs font-mono mt-0.5 tabular-nums">{{ '%.1f'|format(p3.points) }}</div>
+    {% if p3.has_live %}<div class="text-xs text-amber-600">live</div>{% endif %}
   </div>
+  {% else %}
+  <div class="flex-1"></div>
   {% endif %}
+
 </div>
 {% endif %}
 
