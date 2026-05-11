@@ -1,5 +1,6 @@
 from functools import wraps
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, current_app
+from flask import (Blueprint, render_template, request, redirect,
+                   url_for, flash, session, current_app)
 from models import db, Player, Country
 from draw import run_draw
 from api_client import fetch_and_sync
@@ -10,24 +11,30 @@ admin_bp = Blueprint('admin', __name__)
 def _require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        password = current_app.config.get('ADMIN_PASSWORD', '')
-        if not password:
-            return Response(
-                'Set ADMIN_PASSWORD to enable the admin panel.',
-                401,
-                {'WWW-Authenticate': 'Basic realm="Admin"'},
-            )
-        auth = request.authorization
-        if not auth or \
-           auth.username != current_app.config.get('ADMIN_USER', 'admin') or \
-           auth.password != password:
-            return Response(
-                'Incorrect credentials.',
-                401,
-                {'WWW-Authenticate': 'Basic realm="Admin"'},
-            )
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('admin.login'))
         return f(*args, **kwargs)
     return decorated
+
+
+@admin_bp.route('/admin/login', methods=['GET', 'POST'])
+def login():
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin.admin'))
+    error = None
+    if request.method == 'POST':
+        password = current_app.config.get('ADMIN_PASSWORD', '')
+        if request.form.get('password') == password:
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin.admin'))
+        error = 'Incorrect password.'
+    return render_template('admin_login.html', error=error)
+
+
+@admin_bp.route('/admin/logout', methods=['POST'])
+def logout():
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('admin.login'))
 
 
 @admin_bp.route('/admin')
