@@ -20,7 +20,7 @@
     </thead>
     <tbody>
       {% for row in standings %}
-      <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors">
+      <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors {% if row.rank == 1 %}bg-amber-950/30 border-l-2 border-l-amber-400{% endif %}">
         <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
         <td class="px-4 py-3 font-semibold">{{ row.player.name }}</td>
         <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.played }}</td>

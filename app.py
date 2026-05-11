@@ -8,9 +8,11 @@ from routes.admin import admin_bp
 from routes.teams import teams_bp
 
 
-def create_app():
+def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_object('config.Config')
+    if test_config:
+        app.config.update(test_config)
 
     db.init_app(app)
 
@@ -21,9 +23,26 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _migrate_db()
         _seed_countries()
 
     return app
+
+
+def _migrate_db():
+    from sqlalchemy import text
+    new_cols = [
+        ('minute',        'INTEGER'),
+        ('goals_json',    'TEXT'),
+        ('bookings_json', 'TEXT'),
+    ]
+    for col, typ in new_cols:
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(text(f'ALTER TABLE matches ADD COLUMN IF NOT EXISTS {col} {typ}'))
+                conn.commit()
+            except Exception:
+                conn.rollback()
 
 
 def _seed_countries():

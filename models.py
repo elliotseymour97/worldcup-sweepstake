@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
@@ -67,6 +68,18 @@ class Match(db.Model):
     status = db.Column(db.String(20), default='SCHEDULED')
     kickoff = db.Column(db.DateTime, nullable=True)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    minute = db.Column(db.Integer, nullable=True)
+    goals_json = db.Column(db.Text, nullable=True)
+    bookings_json = db.Column(db.Text, nullable=True)
+
+    @property
+    def goals(self):
+        return json.loads(self.goals_json) if self.goals_json else []
+
+    @property
+    def red_cards(self):
+        bookings = json.loads(self.bookings_json) if self.bookings_json else []
+        return [b for b in bookings if b.get('card') in ('RED_CARD', 'YELLOW_RED_CARD')]
 
     def __repr__(self):
         return f'<Match {self.home_team_name} vs {self.away_team_name}>'

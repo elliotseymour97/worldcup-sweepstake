@@ -129,7 +129,7 @@ def player_standings():
             'furthest': furthest,
         })
 
-    rows.sort(key=lambda x: (-x['points'], -x['gd'], -x['furthest']))
+    rows.sort(key=lambda x: (-x['points'], -x['gd'], -x['furthest'], x['player'].name))
     for i, row in enumerate(rows):
         row['rank'] = i + 1
 

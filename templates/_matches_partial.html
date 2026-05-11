@@ -1,37 +1,106 @@
-{% macro team_cell(country, team_name) %}
+{% macro team_cell(country, team_name, winning, active) %}
   <div class="text-center">
-    <div class="font-semibold text-sm">{{ team_name }}</div>
+    <div class="font-semibold text-sm
+      {% if active %}
+        {% if winning == true %}text-white{% elif winning == false %}text-gray-500{% else %}text-gray-200{% endif %}
+      {% else %}
+        text-gray-200
+      {% endif %}">
+      {{ team_name }}
+    </div>
     {% if country and country.player %}
-    <div class="text-xs text-gray-500 mt-0.5">{{ country.player.name }}</div>
+    <div class="flex items-center justify-center gap-1 mt-1">
+      <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ country.multiplier }}</span>
+      <span class="text-xs text-gray-500">{{ country.player.name }}</span>
+    </div>
     {% endif %}
   </div>
 {% endmacro %}
 
+
 {% macro score_cell(match) %}
   {% if match.status in ('IN_PLAY', 'PAUSED') %}
-    <div class="text-2xl font-bold text-emerald-400 tabular-nums">{{ match.home_score }} – {{ match.away_score }}</div>
-    <div class="text-xs text-emerald-500 mt-0.5">{{ 'HT' if match.status == 'PAUSED' else 'LIVE' }}</div>
+    <div class="text-2xl font-bold text-emerald-400 tabular-nums tracking-tight">
+      {{ match.home_score }} – {{ match.away_score }}
+    </div>
+    {% if match.status == 'PAUSED' %}
+    <span class="mt-1 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">HT</span>
+    {% else %}
+    <span class="mt-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
+    {% endif %}
+    {% if match.minute %}
+    <div class="text-xs text-gray-500 mt-0.5">{{ match.minute }}'</div>
+    {% endif %}
   {% elif match.status == 'FINISHED' %}
-    <div class="text-2xl font-bold text-gray-100 tabular-nums">{{ match.home_score }} – {{ match.away_score }}</div>
-    <div class="text-xs text-gray-600 mt-0.5">FT</div>
+    <div class="text-2xl font-bold text-gray-100 tabular-nums tracking-tight">
+      {{ match.home_score }} – {{ match.away_score }}
+    </div>
+    <span class="mt-1 text-xs text-gray-600 font-medium">FT</span>
   {% else %}
     {% if match.kickoff %}
-    <div class="text-sm text-gray-400">{{ match.kickoff.strftime('%d %b %H:%M') }}</div>
+    <time data-utc="{{ match.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-sm text-gray-400">
+      {{ match.kickoff.strftime('%d %b %H:%M') }}
+    </time>
     {% else %}
     <div class="text-sm text-gray-600">TBC</div>
     {% endif %}
   {% endif %}
 {% endmacro %}
 
+
 {% macro match_card(match) %}
-<div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-3">
-  <div class="flex-1">{{ team_cell(match.home_country, match.home_team_name) }}</div>
-  <div class="w-28 text-center flex flex-col items-center">
-    {{ score_cell(match) }}
-    <div class="text-xs text-gray-600 mt-1">{{ stage_labels.get(match.stage, match.stage) }}</div>
-    {% if match.group_name %}<div class="text-xs text-gray-700">Group {{ match.group_name }}</div>{% endif %}
+{% set is_live     = match.status in ('IN_PLAY', 'PAUSED') %}
+{% set is_finished = match.status == 'FINISHED' %}
+{% set has_score   = match.home_score is not none and match.away_score is not none %}
+{% set home_winning = has_score and match.home_score > match.away_score %}
+{% set away_winning = has_score and match.away_score > match.home_score %}
+{% set active = is_live or is_finished %}
+
+<div class="bg-gray-900 border rounded-xl px-4 py-3 flex items-center gap-3
+  {% if is_live %}card-live border-emerald-500{% else %}border-gray-800{% endif %}">
+
+  <div class="flex-1">
+    {{ team_cell(match.home_country, match.home_team_name, home_winning if active else none, active) }}
   </div>
-  <div class="flex-1">{{ team_cell(match.away_country, match.away_team_name) }}</div>
+
+  <div class="w-32 text-center flex flex-col items-center">
+    {{ score_cell(match) }}
+    <div class="text-xs text-gray-600 mt-1.5">{{ stage_labels.get(match.stage, match.stage) }}</div>
+    {% if match.group_name %}
+    <div class="text-xs text-gray-700">Group {{ match.group_name }}</div>
+    {% endif %}
+  </div>
+
+  <div class="flex-1">
+    {{ team_cell(match.away_country, match.away_team_name, away_winning if active else none, active) }}
+  </div>
+
+  {% if is_live and (match.goals or match.red_cards) %}
+  <div class="w-full border-t border-gray-800 mt-2 pt-2 grid grid-cols-2 gap-x-4 text-xs">
+    <div class="space-y-0.5">
+      {% for g in match.goals if g.is_home %}
+      <div class="text-gray-300">
+        <span class="text-gray-500">{{ g.minute }}'</span>
+        {{ g.scorer }}{% if g.type == 'OWN_GOAL' %} <span class="text-red-400">(OG)</span>{% elif g.type == 'PENALTY' %} <span class="text-gray-500">(P)</span>{% endif %}
+      </div>
+      {% endfor %}
+      {% for c in match.red_cards if c.is_home %}
+      <div class="text-red-400"><span class="text-gray-500">{{ c.minute }}'</span> {{ c.player }} <span class="text-xs">(RC)</span></div>
+      {% endfor %}
+    </div>
+    <div class="space-y-0.5 text-right">
+      {% for g in match.goals if not g.is_home %}
+      <div class="text-gray-300">
+        {% if g.type == 'OWN_GOAL' %}<span class="text-red-400">(OG)</span> {% elif g.type == 'PENALTY' %}<span class="text-gray-500">(P)</span> {% endif %}{{ g.scorer }} <span class="text-gray-500">{{ g.minute }}'</span>
+      </div>
+      {% endfor %}
+      {% for c in match.red_cards if not c.is_home %}
+      <div class="text-red-400"><span class="text-xs">(RC)</span> {{ c.player }} <span class="text-gray-500">{{ c.minute }}'</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endmacro %}
 
@@ -40,7 +109,7 @@
 {% if live %}
 <section class="mb-8">
   <h2 class="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-2">
-    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span> Live Now
+    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block"></span> Live Now
   </h2>
   <div class="space-y-2">
     {% for m in live %}{{ match_card(m) }}{% endfor %}
@@ -76,7 +145,7 @@
 
 {% if not live and not upcoming and not results %}
 <div class="text-center py-16 text-gray-500">
-  <p class="text-lg mb-1">No match data yet.</p>
-  <p class="text-sm">Add your API key in the <a href="/admin" class="text-emerald-400 hover:underline">Admin</a> panel and click Refresh.</p>
+  <p class="text-lg mb-1">Syncing match data...</p>
+  <p class="text-sm">This refreshes automatically. If it stays empty, check the API key in <a href="/admin" class="text-emerald-400 hover:underline">Admin</a>.</p>
 </div>
 {% endif %}

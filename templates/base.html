@@ -11,9 +11,14 @@
     .tier-badge-2 { background:#94a3b8; color:#1c1917; }
     .tier-badge-3 { background:#b45309; color:#fff; }
     .tier-badge-4 { background:#4b5563; color:#fff; }
+    #page-loader { position:fixed;top:0;left:0;width:100%;height:3px;background:#34d399;opacity:0;transition:opacity 200ms;z-index:100;pointer-events:none; }
+    @keyframes live-glow { 0%,100%{border-color:rgb(52 211 153/.4)} 50%{border-color:rgb(52 211 153/.9)} }
+    .card-live { animation: live-glow 1.5s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <div id="page-loader"></div>
 
   <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
@@ -29,7 +34,7 @@
   <main class="max-w-6xl mx-auto px-4 py-8">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
-        <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium
+        <div class="flash-msg mb-4 px-4 py-3 rounded-lg text-sm font-medium transition-opacity duration-500
           {{ 'bg-emerald-900 border border-emerald-700 text-emerald-200' if category == 'success' else 'bg-red-900 border border-red-700 text-red-200' }}">
           {{ message }}
         </div>
@@ -37,5 +42,32 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    // Loading bar
+    const loader = document.getElementById('page-loader');
+    document.addEventListener('htmx:beforeRequest', () => loader.style.opacity = '1');
+    document.addEventListener('htmx:afterSettle',   () => loader.style.opacity = '0');
+
+    // Auto-dismiss flash messages after 4s
+    setTimeout(() => {
+      document.querySelectorAll('.flash-msg').forEach(el => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 500);
+      });
+    }, 4000);
+
+    // Convert UTC kickoff times to local timezone
+    function localizeTimestamps() {
+      document.querySelectorAll('time[data-utc]').forEach(el => {
+        const d = new Date(el.dataset.utc);
+        el.textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                       + ' '
+                       + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      });
+    }
+    document.addEventListener('DOMContentLoaded', localizeTimestamps);
+    document.addEventListener('htmx:afterSettle',  localizeTimestamps);
+  </script>
 </body>
 </html>

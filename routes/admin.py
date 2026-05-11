@@ -4,6 +4,7 @@ from flask import (Blueprint, render_template, request, redirect,
 from models import db, Player, Country
 from draw import run_draw
 from api_client import fetch_and_sync
+from routes.main import invalidate_standings_cache
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -51,6 +52,7 @@ def do_draw():
     names = [request.form.get(f'player{i}', '') for i in range(1, 7)]
     try:
         run_draw(names)
+        invalidate_standings_cache()
         flash('Draw complete! Countries have been assigned.', 'success')
     except ValueError as e:
         flash(str(e), 'error')
@@ -71,5 +73,6 @@ def reset_draw():
     Country.query.update({'player_id': None})
     Player.query.delete()
     db.session.commit()
+    invalidate_standings_cache()
     flash('Draw has been reset.', 'success')
     return redirect(url_for('admin.admin'))

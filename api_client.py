@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import requests
 from datetime import datetime, timedelta
 from typing import Optional
@@ -90,16 +91,41 @@ def _sync_matches(api_matches: list) -> None:
             match = Match(api_id=api_id)
             db.session.add(match)
 
-        match.home_team_name = home_name
-        match.away_team_name = away_name
-        match.home_team_id   = home_country.id if home_country else None
-        match.away_team_id   = away_country.id if away_country else None
-        match.home_score     = home_score
-        match.away_score     = away_score
-        match.stage          = stage
-        match.group_name     = group_letter
-        match.status         = status
-        match.kickoff        = kickoff
-        match.last_updated   = datetime.utcnow()
+        home_api_id = m.get('homeTeam', {}).get('id')
+
+        goals = []
+        for g in (m.get('goals') or []):
+            minute    = g.get('minute', 0)
+            inj       = g.get('injuryTime')
+            disp_min  = f"{minute}+{inj}" if inj else str(minute)
+            scorer    = (g.get('scorer') or {}).get('name') or '?'
+            team_id   = (g.get('team') or {}).get('id')
+            goal_type = g.get('type', 'REGULAR')
+            goals.append({'minute': disp_min, 'scorer': scorer,
+                          'is_home': team_id == home_api_id, 'type': goal_type})
+
+        bookings = []
+        for b in (m.get('bookings') or []):
+            b_minute = b.get('minute', 0)
+            player   = (b.get('player') or {}).get('name') or '?'
+            team_id  = (b.get('team') or {}).get('id')
+            card     = b.get('card', '')
+            bookings.append({'minute': b_minute, 'player': player,
+                             'is_home': team_id == home_api_id, 'card': card})
+
+        match.home_team_name  = home_name
+        match.away_team_name  = away_name
+        match.home_team_id    = home_country.id if home_country else None
+        match.away_team_id    = away_country.id if away_country else None
+        match.home_score      = home_score
+        match.away_score      = away_score
+        match.stage           = stage
+        match.group_name      = group_letter
+        match.status          = status
+        match.kickoff         = kickoff
+        match.last_updated    = datetime.utcnow()
+        match.minute          = m.get('minute')
+        match.goals_json      = json.dumps(goals) if goals else None
+        match.bookings_json   = json.dumps(bookings) if bookings else None
 
     db.session.commit()
