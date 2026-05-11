@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Bracket – WC 2026 Sweep{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">Knockout Bracket</h1>
+
+{% if matches_by_stage %}
+
+{% for stage in knockout_stages %}
+{% if stage in matches_by_stage %}
+{% set matches = matches_by_stage[stage] %}
+
+<section class="mb-10">
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+    {% if stage == 'FINAL' %}
+    <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+    {% else %}
+    <span class="w-2 h-2 rounded-full bg-gray-600 inline-block"></span>
+    {% endif %}
+    {{ stage_labels.get(stage, stage) }}
+  </h2>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ '1' if stage == 'FINAL' else '2' if stage in ('SEMI_FINALS','THIRD_PLACE') else '2' }} gap-2">
+    {% for m in matches %}
+    {% set is_finished = m.status == 'FINISHED' %}
+    {% set is_live = m.status in ('IN_PLAY', 'PAUSED') %}
+    {% set has_score = m.home_score is not none and m.away_score is not none %}
+    {% set home_wins = has_score and m.home_score > m.away_score %}
+    {% set away_wins = has_score and m.away_score > m.home_score %}
+
+    <div class="bg-gray-900 border rounded-xl px-4 py-3
+      {{ 'card-live border-emerald-500' if is_live else 'border-gray-800' }}">
+      <div class="flex items-center gap-3">
+
+        {# Home team #}
+        <div class="flex-1 text-center">
+          <div class="font-semibold text-sm
+            {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-500' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
+            {{ m.home_team_name or 'TBD' }}
+          </div>
+          {% if m.home_country and m.home_country.player %}
+          <div class="flex items-center justify-center gap-1 mt-1">
+            <span class="tier-badge-{{ m.home_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.home_country.multiplier }}</span>
+            <span class="text-xs text-gray-500">{{ m.home_country.player.name }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        {# Score / time #}
+        <div class="w-28 text-center flex flex-col items-center">
+          {% if is_live %}
+          <div class="text-2xl font-bold text-emerald-400 tabular-nums">{{ m.home_score }}–{{ m.away_score }}</div>
+          <span class="mt-0.5 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
+          {% elif is_finished %}
+          <div class="text-2xl font-bold text-gray-100 tabular-nums">{{ m.home_score }}–{{ m.away_score }}</div>
+          <span class="mt-0.5 text-xs text-gray-600 font-medium">FT</span>
+          {% elif m.kickoff %}
+          <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-sm text-gray-400">
+            {{ m.kickoff.strftime('%d %b %H:%M') }}
+          </time>
+          {% else %}
+          <div class="text-sm text-gray-600">TBC</div>
+          {% endif %}
+        </div>
+
+        {# Away team #}
+        <div class="flex-1 text-center">
+          <div class="font-semibold text-sm
+            {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-500' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
+            {{ m.away_team_name or 'TBD' }}
+          </div>
+          {% if m.away_country and m.away_country.player %}
+          <div class="flex items-center justify-center gap-1 mt-1">
+            <span class="tier-badge-{{ m.away_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.away_country.multiplier }}</span>
+            <span class="text-xs text-gray-500">{{ m.away_country.player.name }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endif %}
+{% endfor %}
+
+{% else %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+  <p class="text-gray-400 text-lg mb-2">Knockout stage not yet started.</p>
+  <p class="text-gray-500 text-sm">Check back once the group stage is complete.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#030712"/>
+  <circle cx="96" cy="96" r="70" fill="#34d399"/>
+  <circle cx="96" cy="96" r="70" fill="none" stroke="#030712" stroke-width="6"/>
+  <!-- Pentagon pattern approximation -->
+  <polygon points="96,36 116,66 148,66 128,90 138,122 96,106 54,122 64,90 44,66 76,66" fill="#030712" opacity="0.25"/>
+  <text x="96" y="112" font-family="Arial,sans-serif" font-size="52" font-weight="900" text-anchor="middle" fill="#030712">WC</text>
+</svg>

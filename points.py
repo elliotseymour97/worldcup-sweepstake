@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import subqueryload
 from models import Player, Match, Country
 
@@ -92,6 +93,28 @@ def country_stats(country):
             'played': played, 'wins': wins, 'draws': draws, 'losses': losses}
 
 
+def _player_form(player):
+    results = []
+    for country in player.countries:
+        for match in country.home_matches + country.away_matches:
+            if match.status != 'FINISHED':
+                continue
+            is_home = match.home_team_id == country.id
+            scored = match.home_score if is_home else match.away_score
+            conceded = match.away_score if is_home else match.home_score
+            if scored is None or conceded is None:
+                continue
+            if scored > conceded:
+                result = 'W'
+            elif scored == conceded and match.stage == 'GROUP_STAGE':
+                result = 'D'
+            else:
+                result = 'L'
+            results.append((match.kickoff or datetime.min, result))
+    results.sort(key=lambda x: x[0], reverse=True)
+    return [r for _, r in results[:5]]
+
+
 def player_standings():
     players = Player.query.options(
         subqueryload(Player.countries).subqueryload(Country.home_matches),
@@ -127,6 +150,7 @@ def player_standings():
             'ga':       ga,
             'gd':       gf - ga,
             'furthest': furthest,
+            'form':     _player_form(player),
         })
 
     rows.sort(key=lambda x: (-x['points'], -x['gd'], -x['furthest'], x['player'].name))

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Groups – WC 2026 Sweep{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">Group Stage Standings</h1>
+
+{% if groups %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for group_name, teams in groups.items() %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div class="px-4 py-2.5 border-b border-gray-800 bg-gray-950">
+      <h2 class="font-bold text-sm tracking-wider text-emerald-400">GROUP {{ group_name }}</h2>
+    </div>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-xs uppercase tracking-wider text-gray-600 border-b border-gray-800">
+          <th class="px-3 py-2 text-left">Team</th>
+          <th class="px-2 py-2 text-center">P</th>
+          <th class="px-2 py-2 text-center">W</th>
+          <th class="px-2 py-2 text-center">D</th>
+          <th class="px-2 py-2 text-center">L</th>
+          <th class="px-2 py-2 text-center">GD</th>
+          <th class="px-2 py-2 text-center font-bold text-gray-400">Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for team in teams %}
+        <tr class="border-b border-gray-800 last:border-0
+          {{ 'bg-emerald-950/20' if loop.index0 < 2 else '' }}
+          hover:bg-gray-800 transition-colors">
+          <td class="px-3 py-2.5">
+            <span class="font-medium text-sm
+              {{ 'text-white' if loop.index0 < 2 else 'text-gray-400' }}">
+              {{ team.name }}
+            </span>
+            {% if team.country and team.country.player %}
+            <span class="ml-1.5 text-xs text-gray-600">{{ team.country.player.name }}</span>
+            {% endif %}
+          </td>
+          <td class="px-2 py-2.5 text-center text-gray-500 text-xs">{{ team.P }}</td>
+          <td class="px-2 py-2.5 text-center text-emerald-400 font-medium text-xs">{{ team.W }}</td>
+          <td class="px-2 py-2.5 text-center text-gray-400 text-xs">{{ team.D }}</td>
+          <td class="px-2 py-2.5 text-center text-red-400 text-xs">{{ team.L }}</td>
+          <td class="px-2 py-2.5 text-center text-xs font-medium
+            {{ 'text-emerald-400' if team.GD > 0 else 'text-red-400' if team.GD < 0 else 'text-gray-500' }}">
+            {{ '+' if team.GD > 0 else '' }}{{ team.GD }}
+          </td>
+          <td class="px-2 py-2.5 text-center font-bold text-white">{{ team.Pts }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</div>
+
+<p class="text-xs text-gray-700 mt-6 text-center">Top 2 from each group advance (shaded rows)</p>
+
+{% else %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+  <p class="text-gray-400 text-lg mb-2">No group stage data yet.</p>
+  <p class="text-gray-500 text-sm">Check back once matches have been synced from the API.</p>
+</div>
+{% endif %}
+
+{% endblock %}

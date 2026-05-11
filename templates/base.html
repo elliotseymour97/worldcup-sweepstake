@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}WC 2026 Sweepstake{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#34d399">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WC2026">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <style>
@@ -24,9 +30,11 @@
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
       <span class="font-bold text-emerald-400 text-base tracking-tight">⚽ WC2026 Sweep</span>
       <a href="/"       class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/' %}text-emerald-400{% else %}text-gray-400{% endif %}">League</a>
-      <a href="/scores" class="text-sm hover:text-emerald-400 transition-colors {% if request.path.startswith('/scores') %}text-emerald-400{% else %}text-gray-400{% endif %}">Scores</a>
-      <a href="/teams"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/teams' %}text-emerald-400{% else %}text-gray-400{% endif %}">Teams</a>
-      <a href="/rules"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/rules' %}text-emerald-400{% else %}text-gray-400{% endif %}">Rules</a>
+      <a href="/scores"   class="text-sm hover:text-emerald-400 transition-colors {% if request.path.startswith('/scores') %}text-emerald-400{% else %}text-gray-400{% endif %}">Scores</a>
+      <a href="/groups"   class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/groups' %}text-emerald-400{% else %}text-gray-400{% endif %}">Groups</a>
+      <a href="/bracket"  class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/bracket' %}text-emerald-400{% else %}text-gray-400{% endif %}">Bracket</a>
+      <a href="/teams"    class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/teams' %}text-emerald-400{% else %}text-gray-400{% endif %}">Teams</a>
+      <a href="/rules"    class="text-sm hover:text-emerald-400 transition-colors {% if request.path == '/rules' %}text-emerald-400{% else %}text-gray-400{% endif %}">Rules</a>
       <a href="/admin"  class="text-sm hover:text-emerald-400 transition-colors ml-auto {% if request.path.startswith('/admin') %}text-emerald-400{% else %}text-gray-400{% endif %}">Admin</a>
     </div>
   </nav>
@@ -69,5 +77,6 @@
     document.addEventListener('DOMContentLoaded', localizeTimestamps);
     document.addEventListener('htmx:afterSettle',  localizeTimestamps);
   </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

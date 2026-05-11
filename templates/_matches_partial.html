@@ -56,27 +56,34 @@
 {% set away_winning = has_score and match.away_score > match.home_score %}
 {% set active = is_live or is_finished %}
 
-<div class="bg-gray-900 border rounded-xl px-4 py-3 flex items-center gap-3
-  {% if is_live %}card-live border-emerald-500{% else %}border-gray-800{% endif %}">
+<div class="bg-gray-900 border rounded-xl px-4 py-3
+  {% if is_live %}card-live border-emerald-500{% else %}border-gray-800{% endif %}"
+  data-match-id="{{ match.id }}"
+  data-home-score="{{ match.home_score if match.home_score is not none else '' }}"
+  data-away-score="{{ match.away_score if match.away_score is not none else '' }}"
+  data-home-name="{{ match.home_team_name }}"
+  data-away-name="{{ match.away_team_name }}">
 
-  <div class="flex-1">
-    {{ team_cell(match.home_country, match.home_team_name, home_winning if active else none, active) }}
-  </div>
+  <div class="flex items-center gap-3">
+    <div class="flex-1">
+      {{ team_cell(match.home_country, match.home_team_name, home_winning if active else none, active) }}
+    </div>
 
-  <div class="w-32 text-center flex flex-col items-center">
-    {{ score_cell(match) }}
-    <div class="text-xs text-gray-600 mt-1.5">{{ stage_labels.get(match.stage, match.stage) }}</div>
-    {% if match.group_name %}
-    <div class="text-xs text-gray-700">Group {{ match.group_name }}</div>
-    {% endif %}
-  </div>
+    <div class="w-32 text-center flex flex-col items-center">
+      {{ score_cell(match) }}
+      <div class="text-xs text-gray-600 mt-1.5">{{ stage_labels.get(match.stage, match.stage) }}</div>
+      {% if match.group_name %}
+      <div class="text-xs text-gray-700">Group {{ match.group_name }}</div>
+      {% endif %}
+    </div>
 
-  <div class="flex-1">
-    {{ team_cell(match.away_country, match.away_team_name, away_winning if active else none, active) }}
+    <div class="flex-1">
+      {{ team_cell(match.away_country, match.away_team_name, away_winning if active else none, active) }}
+    </div>
   </div>
 
   {% if is_live and (match.goals or match.red_cards) %}
-  <div class="w-full border-t border-gray-800 mt-2 pt-2 grid grid-cols-2 gap-x-4 text-xs">
+  <div class="border-t border-gray-800 mt-2 pt-2 grid grid-cols-2 gap-x-4 text-xs">
     <div class="space-y-0.5">
       {% for g in match.goals if g.is_home %}
       <div class="text-gray-300">

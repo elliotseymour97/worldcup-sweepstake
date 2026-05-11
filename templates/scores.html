@@ -2,9 +2,22 @@
 {% block title %}Scores – WC 2026 Sweep{% endblock %}
 {% block content %}
 
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-6">
   <h1 class="text-3xl font-bold">Match Scores</h1>
-  <span class="text-gray-600 text-xs">Auto-refreshes every 60s</span>
+  <div class="flex items-center gap-3">
+    <button id="notify-btn"
+      onclick="requestGoalAlerts()"
+      class="hidden text-xs px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-700 transition-colors">
+      🔔 Enable alerts
+    </button>
+    <span class="text-gray-600 text-xs">Refreshes every 30s</span>
+  </div>
+</div>
+
+{# Countdown banner — outside HTMX div so it survives swaps #}
+<div id="countdown-banner" class="hidden mb-6 bg-gray-900 border border-gray-800 rounded-xl px-5 py-3 flex items-center gap-3">
+  <span class="text-gray-500 text-sm">Next match in</span>
+  <span id="countdown-timer" class="text-emerald-400 font-mono font-bold text-lg tabular-nums"></span>
 </div>
 
 <div id="match-data"
@@ -14,4 +27,107 @@
   {% include '_matches_partial.html' %}
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Goal alerts ──────────────────────────────────────────────
+  let _prevScores = null;
+
+  function _captureScores() {
+    const s = {};
+    document.querySelectorAll('[data-match-id]').forEach(el => {
+      s[el.dataset.matchId] = {
+        home: el.dataset.homeScore,
+        away: el.dataset.awayScore,
+        homeName: el.dataset.homeName,
+        awayName: el.dataset.awayName,
+      };
+    });
+    return s;
+  }
+
+  function _checkGoals(next) {
+    if (!_prevScores) return;
+    for (const [id, cur] of Object.entries(next)) {
+      const prev = _prevScores[id];
+      if (!prev) continue;
+      const oldH = parseInt(prev.home) || 0, newH = parseInt(cur.home) || 0;
+      const oldA = parseInt(prev.away) || 0, newA = parseInt(cur.away) || 0;
+      if (newH > oldH || newA > oldA) {
+        _sendAlert(`${cur.homeName} ${newH}–${newA} ${cur.awayName}`);
+      }
+    }
+  }
+
+  function _sendAlert(body) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('⚽ Goal!', { body, icon: '/static/icon.svg' });
+    }
+  }
+
+  function requestGoalAlerts() {
+    if (!('Notification' in window)) return;
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') document.getElementById('notify-btn').classList.add('hidden');
+    });
+  }
+
+  function _initNotifyBtn() {
+    const btn = document.getElementById('notify-btn');
+    if (!btn || !('Notification' in window)) return;
+    if (Notification.permission === 'default') btn.classList.remove('hidden');
+  }
+
+  // ── Countdown ────────────────────────────────────────────────
+  let _countdownInterval = null;
+
+  function _updateCountdown() {
+    const banner = document.getElementById('countdown-banner');
+    const timer  = document.getElementById('countdown-timer');
+    if (!banner || !timer) return;
+
+    const now = Date.now();
+    const upcoming = [];
+    document.querySelectorAll('#match-data time[data-utc]').forEach(t => {
+      const d = new Date(t.dataset.utc).getTime();
+      if (d > now) upcoming.push(d);
+    });
+
+    if (!upcoming.length) { banner.classList.add('hidden'); return; }
+    upcoming.sort((a, b) => a - b);
+    const next = upcoming[0];
+    banner.classList.remove('hidden');
+
+    if (_countdownInterval) clearInterval(_countdownInterval);
+    _countdownInterval = setInterval(() => {
+      const diff = next - Date.now();
+      if (diff <= 0) {
+        timer.textContent = 'Kick off!';
+        clearInterval(_countdownInterval);
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      timer.textContent = h > 0
+        ? `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
+        : `${m}m ${String(s).padStart(2,'0')}s`;
+    }, 1000);
+  }
+
+  // ── HTMX hooks ───────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    _prevScores = _captureScores();
+    _updateCountdown();
+    _initNotifyBtn();
+  });
+
+  document.addEventListener('htmx:afterSettle', () => {
+    const next = _captureScores();
+    _checkGoals(next);
+    _prevScores = next;
+    _updateCountdown();
+  });
+</script>
 {% endblock %}

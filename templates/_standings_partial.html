@@ -16,13 +16,16 @@
         <th class="px-4 py-3 text-center">GD</th>
         <th class="px-4 py-3 text-center">Pts</th>
         <th class="px-4 py-3 text-left hidden sm:table-cell">Furthest</th>
+        <th class="px-4 py-3 text-left hidden md:table-cell">Form</th>
       </tr>
     </thead>
     <tbody>
       {% for row in standings %}
       <tr class="border-b border-gray-800 hover:bg-gray-900 transition-colors {% if row.rank == 1 %}bg-amber-950/30 border-l-2 border-l-amber-400{% endif %}">
         <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
-        <td class="px-4 py-3 font-semibold">{{ row.player.name }}</td>
+        <td class="px-4 py-3 font-semibold">
+          <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
+        </td>
         <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.played }}</td>
         <td class="px-4 py-3 text-center text-emerald-400 font-medium">{{ row.wins }}</td>
         <td class="px-4 py-3 text-center text-gray-400 hidden sm:table-cell">{{ row.draws }}</td>
@@ -37,6 +40,17 @@
         <td class="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
           {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
           {{ labels[row.furthest] }}
+        </td>
+        <td class="px-4 py-3 hidden md:table-cell">
+          <div class="flex gap-1">
+            {% for result in row.form %}
+            <span class="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center
+              {{ 'bg-emerald-500 text-black' if result == 'W' else 'bg-gray-600 text-white' if result == 'D' else 'bg-red-500 text-white' }}">
+              {{ result }}
+            </span>
+            {% endfor %}
+            {% if not row.form %}<span class="text-gray-700 text-xs">–</span>{% endif %}
+          </div>
         </td>
       </tr>
       {% endfor %}

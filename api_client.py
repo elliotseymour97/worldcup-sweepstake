@@ -20,9 +20,14 @@ STAGE_MAP = {
 }
 
 
+def _normalise(s: str) -> str:
+    return s.lower().replace(' & ', ' and ').replace('&', 'and')
+
+
 def _find_country(api_name: str) -> Optional[Country]:
     if not api_name:
         return None
+    needle = _normalise(api_name)
     c = Country.query.filter(
         db.func.lower(Country.api_name) == api_name.lower()
     ).first()
@@ -30,6 +35,13 @@ def _find_country(api_name: str) -> Optional[Country]:
         c = Country.query.filter(
             db.func.lower(Country.name) == api_name.lower()
         ).first()
+    if not c:
+        # Normalise & vs and on both sides and retry
+        all_countries = Country.query.all()
+        for country in all_countries:
+            if _normalise(country.api_name) == needle or _normalise(country.name) == needle:
+                c = country
+                break
     return c
 
 

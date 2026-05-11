@@ -86,6 +86,39 @@ class TestAdminActions:
         assert Player.query.count() == 0
 
 
+class TestFindCountry:
+
+    def test_exact_api_name_match(self, db):
+        from api_client import _find_country
+        from models import Country
+        c = Country.query.filter_by(name='Bosnia & Herzegovina').first()
+        assert c is not None
+        result = _find_country('Bosnia and Herzegovina')
+        assert result is not None
+        assert result.id == c.id
+
+    def test_ampersand_variant_matches(self, db):
+        from api_client import _find_country
+        from models import Country
+        c = Country.query.filter_by(name='Bosnia & Herzegovina').first()
+        assert c is not None
+        result = _find_country('Bosnia & Herzegovina')
+        assert result is not None
+        assert result.id == c.id
+
+    def test_none_returns_none(self, db):
+        from api_client import _find_country
+        assert _find_country(None) is None
+
+    def test_empty_string_returns_none(self, db):
+        from api_client import _find_country
+        assert _find_country('') is None
+
+    def test_unknown_team_returns_none(self, db):
+        from api_client import _find_country
+        assert _find_country('Atlantis FC') is None
+
+
 class TestModels:
 
     def test_match_goals_property_empty(self, make_country, make_match):

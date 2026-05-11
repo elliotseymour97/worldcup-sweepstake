@@ -1,0 +1,17 @@
+{
+  "name": "WC 2026 Sweepstake",
+  "short_name": "WC2026",
+  "description": "World Cup 2026 Sweepstake tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#34d399",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
