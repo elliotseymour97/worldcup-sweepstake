@@ -1,7 +1,8 @@
 import threading
 from datetime import date
 from flask import Blueprint, render_template, current_app
-from models import Match
+from sqlalchemy.orm import joinedload
+from models import Match, Country
 from api_client import fetch_and_sync
 from points import STAGE_LABELS
 
@@ -18,7 +19,10 @@ def _trigger_sync():
 
 def _grouped_matches():
     _trigger_sync()
-    all_matches = Match.query.order_by(Match.kickoff.asc()).all()
+    all_matches = Match.query.options(
+        joinedload(Match.home_country).joinedload(Country.player),
+        joinedload(Match.away_country).joinedload(Country.player),
+    ).order_by(Match.kickoff.asc()).all()
     today = date.today()
 
     live     = [m for m in all_matches if m.status in ('IN_PLAY', 'PAUSED')]

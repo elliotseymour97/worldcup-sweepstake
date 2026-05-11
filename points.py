@@ -1,4 +1,5 @@
-from models import Player, Match
+from sqlalchemy.orm import subqueryload
+from models import Player, Match, Country
 
 STAGE_BONUS = {
     'GROUP_STAGE':    0,
@@ -92,7 +93,10 @@ def country_stats(country):
 
 
 def player_standings():
-    players = Player.query.all()
+    players = Player.query.options(
+        subqueryload(Player.countries).subqueryload(Country.home_matches),
+        subqueryload(Player.countries).subqueryload(Country.away_matches),
+    ).all()
     rows = []
 
     for player in players:
