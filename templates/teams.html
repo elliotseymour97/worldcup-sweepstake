@@ -27,6 +27,7 @@
             <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded shrink-0">
               {{ country.group_name }}
             </span>
+            <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
             <span>{{ country.name }}</span>
             <span class="text-gray-600 text-xs ml-auto">FIFA #{{ country.fifa_ranking }}</span>
           </div>
@@ -48,6 +49,7 @@
     {% for country in group_countries %}
     <div class="flex items-center gap-1.5 text-xs mb-1">
       <span class="tier-badge-{{ country.tier }} font-bold px-1 py-0.5 rounded text-xs">T{{ country.tier }}</span>
+      <img src="{{ flag_url(country.code) }}" class="w-4 h-3 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
       <span class="{% if country.player %}text-gray-200{% else %}text-gray-600{% endif %}">{{ country.name }}</span>
       {% if country.player %}
       <span class="text-gray-600 ml-auto">{{ country.player.name.split()[0] }}</span>

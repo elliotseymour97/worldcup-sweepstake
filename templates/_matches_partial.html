@@ -1,12 +1,17 @@
 {% macro team_cell(country, team_name, winning, active) %}
   <div class="text-center">
-    <div class="font-semibold text-sm
-      {% if active %}
-        {% if winning == true %}text-white{% elif winning == false %}text-gray-500{% else %}text-gray-200{% endif %}
-      {% else %}
-        text-gray-200
-      {% endif %}">
-      {{ country.name if country else team_name }}
+    <div class="flex items-center justify-center gap-1.5">
+      {% if country %}
+      <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
+      {% endif %}
+      <span class="font-semibold text-sm
+        {% if active %}
+          {% if winning == true %}text-white{% elif winning == false %}text-gray-500{% else %}text-gray-200{% endif %}
+        {% else %}
+          text-gray-200
+        {% endif %}">
+        {{ country.name if country else team_name }}
+      </span>
     </div>
     {% if country and country.player %}
     {% set cn = player_color(country.player.id) %}

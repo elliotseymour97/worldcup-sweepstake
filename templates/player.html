@@ -35,11 +35,14 @@
       {% for country, stats in country_data %}
       <tr class="border-b border-gray-800 last:border-0 hover:bg-gray-900 transition-colors">
         <td class="px-4 py-3 font-semibold">
+          <span class="flex items-center gap-2">
+          <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
           {{ country.name }}
           {% if stats.furthest > 0 %}
           {% set labels = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final'] %}
           <span class="ml-2 text-xs text-emerald-600">{{ labels[stats.furthest] }}</span>
           {% endif %}
+          </span>
         </td>
         <td class="px-4 py-3 text-center">
           <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded">×{{ country.multiplier }}</span>

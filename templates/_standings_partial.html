@@ -147,6 +147,7 @@
       <div class="flex items-center justify-between text-sm">
         <span class="flex items-center gap-2">
           <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded">×{{ country.multiplier }}</span>
+          <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
           <span class="{% if stats.furthest == 0 %}text-gray-500{% else %}text-gray-200{% endif %}">
             {{ country.name }}
           </span>

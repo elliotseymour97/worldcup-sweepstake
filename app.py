@@ -10,6 +10,25 @@ from routes.teams import teams_bp
 
 PLAYER_COLORS = ['emerald', 'blue', 'violet', 'amber', 'rose', 'cyan']
 
+# FIFA 3-letter code → ISO 3166-1 alpha-2 (for flagcdn.com)
+_FIFA_TO_ISO2 = {
+    'MEX': 'mx', 'KOR': 'kr', 'CZE': 'cz', 'RSA': 'za', 'SUI': 'ch',
+    'CAN': 'ca', 'QAT': 'qa', 'BIH': 'ba', 'BRA': 'br', 'MAR': 'ma',
+    'SCO': 'gb-sct', 'HAI': 'ht', 'USA': 'us', 'AUS': 'au', 'TUR': 'tr',
+    'PAR': 'py', 'GER': 'de', 'ECU': 'ec', 'CIV': 'ci', 'CUW': 'cw',
+    'NED': 'nl', 'JPN': 'jp', 'SWE': 'se', 'TUN': 'tn', 'BEL': 'be',
+    'IRN': 'ir', 'EGY': 'eg', 'NZL': 'nz', 'ESP': 'es', 'URU': 'uy',
+    'KSA': 'sa', 'CPV': 'cv', 'FRA': 'fr', 'SEN': 'sn', 'NOR': 'no',
+    'IRQ': 'iq', 'ARG': 'ar', 'AUT': 'at', 'ALG': 'dz', 'JOR': 'jo',
+    'POR': 'pt', 'COL': 'co', 'COD': 'cd', 'UZB': 'uz', 'ENG': 'gb-eng',
+    'CRO': 'hr', 'GHA': 'gh', 'PAN': 'pa',
+}
+
+
+def _flag_url(code: str) -> str:
+    iso = _FIFA_TO_ISO2.get(code, code.lower())
+    return f'https://flagcdn.com/20x15/{iso}.png'
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -25,6 +44,7 @@ def create_app(test_config=None):
     app.register_blueprint(teams_bp)
 
     app.jinja_env.globals['player_color'] = lambda pid: PLAYER_COLORS[int(pid) % len(PLAYER_COLORS)]
+    app.jinja_env.globals['flag_url'] = _flag_url
 
     with app.app_context():
         db.create_all()
