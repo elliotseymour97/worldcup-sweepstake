@@ -9,6 +9,45 @@
 </div>
 {% endif %}
 
+{# ── Podium ── #}
+{% if standings | length >= 1 %}
+<div class="flex flex-col sm:flex-row gap-3 mb-8 items-end">
+  {# 2nd place — renders first on mobile (order-2 on sm) #}
+  {% if standings | length >= 2 %}
+  {% set p2 = standings[1] %}
+  {% set cn2 = player_color(p2.player.id) %}
+  <div class="flex-1 sm:order-1 bg-gray-900 border border-{{ cn2 }}-800/50 rounded-xl px-4 py-4 text-center">
+    <div class="text-2xl mb-1">🥈</div>
+    <div class="font-bold text-{{ cn2 }}-400 text-base">{{ p2.player.name }}</div>
+    <div class="text-gray-400 text-sm font-mono mt-0.5">{{ '%.2f'|format(p2.points) }} pts</div>
+    {% if p2.has_live %}<div class="text-xs text-amber-600 mt-0.5">live</div>{% endif %}
+  </div>
+  {% endif %}
+
+  {# 1st place — centre, slightly taller #}
+  {% set p1 = standings[0] %}
+  {% set cn1 = player_color(p1.player.id) %}
+  <div class="flex-1 sm:order-2 bg-gray-900 border-2 border-{{ cn1 }}-500/60 rounded-xl px-4 py-5 text-center shadow-lg shadow-{{ cn1 }}-900/20">
+    <div class="text-3xl mb-1">🏆</div>
+    <div class="font-bold text-xl text-{{ cn1 }}-400">{{ p1.player.name }}</div>
+    <div class="text-gray-200 font-bold font-mono mt-1">{{ '%.2f'|format(p1.points) }} pts</div>
+    {% if p1.has_live %}<div class="text-xs text-amber-500 mt-0.5">live</div>{% endif %}
+  </div>
+
+  {# 3rd place #}
+  {% if standings | length >= 3 %}
+  {% set p3 = standings[2] %}
+  {% set cn3 = player_color(p3.player.id) %}
+  <div class="flex-1 sm:order-3 bg-gray-900 border border-{{ cn3 }}-800/50 rounded-xl px-4 py-4 text-center">
+    <div class="text-2xl mb-1">🥉</div>
+    <div class="font-bold text-{{ cn3 }}-400 text-base">{{ p3.player.name }}</div>
+    <div class="text-gray-400 text-sm font-mono mt-0.5">{{ '%.2f'|format(p3.points) }} pts</div>
+    {% if p3.has_live %}<div class="text-xs text-amber-600 mt-0.5">live</div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
 {# ── Main standings table — always scrollable so all columns are reachable ── #}
 <div class="relative rounded-xl border border-gray-800 mb-10">
   {# Right-fade gradient on mobile signals there are more columns to scroll to #}
@@ -34,12 +73,12 @@
       </thead>
       <tbody>
         {% for row in standings %}
-        <tr class="border-b border-gray-800 hover:bg-gray-900/60 transition-colors
-          {% if row.rank == 1 %}bg-amber-950/30 border-l-2 border-l-amber-400
-          {% elif row.has_live %}border-l-2 border-l-amber-700{% endif %}">
+        {% set cn = player_color(row.player.id) %}
+        <tr class="border-b border-gray-800 hover:bg-gray-900/60 transition-colors border-l-2 border-l-{{ cn }}-500
+          {% if row.rank == 1 %}bg-{{ cn }}-950/20{% endif %}">
           <td class="px-3 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
           <td class="px-3 py-3 font-semibold whitespace-nowrap">
-            <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
+            <a href="/player/{{ row.player.id }}" class="text-{{ cn }}-400 hover:text-{{ cn }}-300 transition-colors">{{ row.player.name }}</a>
           </td>
           <td class="px-3 py-3 text-center text-gray-400">{{ row.played }}</td>
           <td class="px-3 py-3 text-center text-emerald-400 font-medium">{{ row.wins }}</td>
@@ -56,7 +95,7 @@
             <span class="text-amber-400">{{ '%.2f'|format(row.points) }}</span>
             <span class="block text-xs font-normal text-amber-700 leading-none -mt-0.5">live</span>
             {% else %}
-            <span class="text-emerald-400">{{ '%.2f'|format(row.points) }}</span>
+            <span class="text-{{ cn }}-400">{{ '%.2f'|format(row.points) }}</span>
             {% endif %}
           </td>
           <td class="px-3 py-3 text-gray-400 text-xs whitespace-nowrap">
@@ -86,12 +125,13 @@
 <h2 class="text-lg font-semibold mb-4 text-gray-300">Country Breakdown</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
   {% for row in standings %}
-  <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+  {% set cn = player_color(row.player.id) %}
+  <div class="bg-gray-900 rounded-xl border border-gray-800 border-l-4 border-l-{{ cn }}-500 p-4">
     <div class="flex justify-between items-baseline mb-3">
       <h3 class="font-bold text-base">
-        <a href="/player/{{ row.player.id }}" class="hover:text-emerald-400 transition-colors">{{ row.player.name }}</a>
+        <a href="/player/{{ row.player.id }}" class="text-{{ cn }}-400 hover:text-{{ cn }}-300 transition-colors">{{ row.player.name }}</a>
       </h3>
-      <span class="{% if row.has_live %}text-amber-400{% else %}text-emerald-400{% endif %} font-bold text-sm">
+      <span class="{% if row.has_live %}text-amber-400{% else %}text-{{ cn }}-400{% endif %} font-bold text-sm">
         {{ '%.2f'|format(row.points) }} pts
       </span>
     </div>

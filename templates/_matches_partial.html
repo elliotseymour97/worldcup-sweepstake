@@ -9,9 +9,10 @@
       {{ team_name }}
     </div>
     {% if country and country.player %}
+    {% set cn = player_color(country.player.id) %}
     <div class="flex items-center justify-center gap-1 mt-1">
       <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ country.multiplier }}</span>
-      <span class="text-xs text-gray-500">{{ country.player.name }}</span>
+      <span class="text-xs text-{{ cn }}-400">{{ country.player.name }}</span>
     </div>
     {% endif %}
   </div>
@@ -124,16 +125,35 @@
 </section>
 {% endif %}
 
-{# ── Upcoming ── #}
-{% if upcoming %}
+{# ── Today ── #}
+{% if today_matches %}
 <section class="mb-8">
-  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">Upcoming</h2>
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-sky-400 mb-3 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span> Today
+  </h2>
   <div class="space-y-2">
-    {% for m in upcoming[:20] %}{{ match_card(m) }}{% endfor %}
-    {% if upcoming|length > 20 %}
-    <p class="text-xs text-gray-600 pl-2">+{{ upcoming|length - 20 }} more scheduled</p>
-    {% endif %}
+    {% for m in today_matches %}{{ match_card(m) }}{% endfor %}
   </div>
+</section>
+{% endif %}
+
+{# ── Upcoming (grouped by date) ── #}
+{% if upcoming_by_date %}
+<section class="mb-8">
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Upcoming</h2>
+  {% for match_date, matches in upcoming_by_date.items() %}
+  <div class="mb-5">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+        {{ match_date.strftime('%a') }} {{ match_date.day }} {{ match_date.strftime('%b') }}
+      </span>
+      <div class="flex-1 border-t border-gray-800"></div>
+    </div>
+    <div class="space-y-2">
+      {% for m in matches %}{{ match_card(m) }}{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
 </section>
 {% endif %}
 
@@ -150,7 +170,12 @@
 </section>
 {% endif %}
 
-{% if not live and not upcoming and not results %}
+{# Last synced status — updated on every HTMX swap #}
+{% if last_synced %}
+<p class="text-xs text-gray-700 text-right mt-6">Synced {{ last_synced }} UTC</p>
+{% endif %}
+
+{% if not live and not today_matches and not upcoming_by_date and not results %}
 <div class="text-center py-16 text-gray-500">
   <p class="text-lg mb-1">Syncing match data...</p>
   <p class="text-sm">This refreshes automatically. If it stays empty, check the API key in <a href="/admin" class="text-emerald-400 hover:underline">Admin</a>.</p>

@@ -8,6 +8,9 @@ from routes.admin import admin_bp
 from routes.teams import teams_bp
 
 
+PLAYER_COLORS = ['emerald', 'blue', 'violet', 'amber', 'rose', 'cyan']
+
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_object('config.Config')
@@ -20,6 +23,8 @@ def create_app(test_config=None):
     app.register_blueprint(scores_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(teams_bp)
+
+    app.jinja_env.globals['player_color'] = lambda pid: PLAYER_COLORS[int(pid) % len(PLAYER_COLORS)]
 
     with app.app_context():
         db.create_all()

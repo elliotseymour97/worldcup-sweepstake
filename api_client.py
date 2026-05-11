@@ -49,6 +49,10 @@ def _find_country(api_name: str) -> Optional[Country]:
     return None
 
 
+def get_last_fetch() -> Optional[datetime]:
+    return _last_fetch
+
+
 def fetch_and_sync() -> tuple[bool, str]:
     global _last_fetch
 

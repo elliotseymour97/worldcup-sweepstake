@@ -10,7 +10,7 @@
       class="hidden text-xs px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-700 transition-colors">
       🔔 Enable alerts
     </button>
-    <span class="text-gray-600 text-xs">Refreshes every 30s</span>
+    <span id="refresh-timer" class="text-gray-700 text-xs tabular-nums"></span>
   </div>
 </div>
 
@@ -117,11 +117,27 @@
     }, 1000);
   }
 
+  // ── Refresh countdown ────────────────────────────────────────
+  let _refreshInterval = null;
+
+  function _startRefreshCountdown() {
+    const el = document.getElementById('refresh-timer');
+    if (_refreshInterval) clearInterval(_refreshInterval);
+    let secs = 30;
+    if (el) el.textContent = `· ${secs}s`;
+    _refreshInterval = setInterval(() => {
+      secs--;
+      if (el) el.textContent = secs > 0 ? `· ${secs}s` : '';
+      if (secs <= 0) clearInterval(_refreshInterval);
+    }, 1000);
+  }
+
   // ── HTMX hooks ───────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     _prevScores = _captureScores();
     _updateCountdown();
     _initNotifyBtn();
+    _startRefreshCountdown();
   });
 
   document.addEventListener('htmx:afterSettle', () => {
@@ -129,6 +145,7 @@
     _checkGoals(next);
     _prevScores = next;
     _updateCountdown();
+    _startRefreshCountdown();
   });
 </script>
 {% endblock %}
