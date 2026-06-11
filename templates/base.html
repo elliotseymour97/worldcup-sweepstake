@@ -12,6 +12,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LM Sweep 2026">
   <link rel="apple-touch-icon" href="/static/icon.svg">
+  <meta property="og:title" content="LM Sweepstake 2026">
+  <meta property="og:description" content="World Cup 2026 sweepstake — live scores, standings and points for the Lanky Munters.">
+  <meta property="og:type" content="website">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <style>
@@ -29,8 +32,11 @@
     /* Hide scrollbar on nav strip */
     .nav-strip { scrollbar-width:none; -ms-overflow-style:none; }
     .nav-strip::-webkit-scrollbar { display:none; }
-    body { font-family:'Inter',system-ui,sans-serif; }
+    body { font-family:'Inter',system-ui,sans-serif; background:radial-gradient(ellipse 100% 40% at 50% -5%, rgba(6,78,59,0.13) 0%, transparent 60%), #030712; }
     .score-num { font-family:'Barlow Condensed',sans-serif; letter-spacing:0.03em; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    main { animation:fadeIn 0.18s ease-out; }
+    .htmx-request { opacity:0.5; transition:opacity 200ms; pointer-events:none; }
   </style>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
@@ -63,6 +69,13 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+
+  <footer class="border-t border-gray-800/50 mt-16 py-5">
+    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between text-xs text-gray-700">
+      <span>⚽ LM Sweepstake 2026</span>
+      <span>Built for the Lanky Munters</span>
+    </div>
+  </footer>
 
   <script>
     // Loading bar

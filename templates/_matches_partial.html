@@ -16,7 +16,7 @@
     {% if country and country.player %}
     {% set cn = player_color(country.player.id) %}
     <div class="flex items-center justify-center gap-1 mt-1">
-      <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ country.multiplier }}</span>
+      <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1 py-0.5 rounded" title="{{ 'Favourite' if country.tier == 1 else '2nd Seed' if country.tier == 2 else '3rd Seed' if country.tier == 3 else 'Underdog' }} ×{{ country.multiplier }}">×{{ country.multiplier }}</span>
       <span class="text-xs text-{{ cn }}-400">{{ country.player.name }}</span>
     </div>
     {% endif %}
