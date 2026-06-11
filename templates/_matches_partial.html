@@ -26,7 +26,7 @@
 
 {% macro score_cell(match) %}
   {% if match.status in ('IN_PLAY', 'PAUSED') %}
-    <div class="text-2xl font-bold text-emerald-400 tabular-nums tracking-tight">
+    <div class="text-2xl font-bold text-emerald-400 tabular-nums tracking-tight score-num">
       {{ match.home_score }} – {{ match.away_score }}
     </div>
     {% if match.status == 'PAUSED' %}
@@ -38,7 +38,7 @@
     <div class="text-xs text-gray-500 mt-0.5">{{ match.minute }}'</div>
     {% endif %}
   {% elif match.status == 'FINISHED' %}
-    <div class="text-2xl font-bold text-gray-100 tabular-nums tracking-tight">
+    <div class="text-2xl font-bold text-gray-100 tabular-nums tracking-tight score-num">
       {{ match.home_score }} – {{ match.away_score }}
     </div>
     <span class="mt-1 text-xs text-gray-600 font-medium">FT</span>
@@ -64,8 +64,8 @@
 {% set home_player = match.home_country.player if (match.home_country and match.home_country.player) else none %}
 {% set away_player = match.away_country.player if (match.away_country and match.away_country.player) else none %}
 
-<div class="bg-gray-900 border rounded-xl px-4 py-3
-  {% if is_live %}card-live border-emerald-500{% else %}border-gray-800{% endif %}"
+<div class="bg-gray-900 border rounded-xl px-4 py-3 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30
+  {% if is_live %}card-live border-emerald-500{% else %}border-gray-800 hover:border-gray-700{% endif %}"
   data-match-id="{{ match.id }}"
   data-home-score="{{ match.home_score if match.home_score is not none else '' }}"
   data-away-score="{{ match.away_score if match.away_score is not none else '' }}"

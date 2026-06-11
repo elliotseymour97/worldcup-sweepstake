@@ -138,7 +138,17 @@
         {% set cn = player_color(row.player.id) %}
         <tr class="border-b border-gray-800 hover:bg-gray-900/60 transition-colors border-l-2 border-l-{{ cn }}-500
           {% if row.rank == 1 %}bg-{{ cn }}-950/20{% endif %}">
-          <td class="px-3 py-3 text-gray-500 font-mono text-xs">{{ row.rank }}</td>
+          <td class="px-3 py-3">
+            {% if row.rank == 1 %}
+            <span class="w-6 h-6 rounded-full bg-amber-500 text-black text-xs font-bold flex items-center justify-center">1</span>
+            {% elif row.rank == 2 %}
+            <span class="w-6 h-6 rounded-full bg-gray-400 text-black text-xs font-bold flex items-center justify-center">2</span>
+            {% elif row.rank == 3 %}
+            <span class="w-6 h-6 rounded-full bg-amber-800 text-white text-xs font-bold flex items-center justify-center">3</span>
+            {% else %}
+            <span class="text-gray-600 font-mono text-xs">{{ row.rank }}</span>
+            {% endif %}
+          </td>
           <td class="px-3 py-3 font-semibold whitespace-nowrap">
             <a href="/player/{{ row.player.id }}" class="text-{{ cn }}-400 hover:text-{{ cn }}-300 transition-colors">{{ row.player.name }}</a>
           </td>
@@ -188,7 +198,7 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
   {% for row in standings %}
   {% set cn = player_color(row.player.id) %}
-  <div class="bg-gray-900 rounded-xl border border-gray-800 border-l-4 border-l-{{ cn }}-500 p-4">
+  <div class="bg-gray-900 rounded-xl border border-gray-800 border-l-4 border-l-{{ cn }}-500 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
     <div class="flex justify-between items-baseline mb-3">
       <h3 class="font-bold text-base">
         <a href="/player/{{ row.player.id }}" class="text-{{ cn }}-400 hover:text-{{ cn }}-300 transition-colors">{{ row.player.name }}</a>

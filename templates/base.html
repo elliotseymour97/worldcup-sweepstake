@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}LM Sweepstake 2026{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#34d399">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,6 +29,8 @@
     /* Hide scrollbar on nav strip */
     .nav-strip { scrollbar-width:none; -ms-overflow-style:none; }
     .nav-strip::-webkit-scrollbar { display:none; }
+    body { font-family:'Inter',system-ui,sans-serif; }
+    .score-num { font-family:'Barlow Condensed',sans-serif; letter-spacing:0.03em; }
   </style>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
@@ -34,17 +38,17 @@
   <div id="page-loader"></div>
   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-xs w-full sm:w-auto"></div>
 
-  <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
-    <div class="nav-strip max-w-6xl mx-auto px-4 py-3 flex items-center gap-5 overflow-x-auto">
-      <span class="font-bold text-emerald-400 text-sm tracking-tight flex-shrink-0 mr-1">⚽ LM Sweep</span>
-      <a href="/"        class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/' %}text-emerald-400{% else %}text-gray-400{% endif %}">League</a>
-      <a href="/scores"  class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path.startswith('/scores') %}text-emerald-400{% else %}text-gray-400{% endif %}">Scores</a>
-      <a href="/groups"  class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/groups' %}text-emerald-400{% else %}text-gray-400{% endif %}">Groups</a>
-      <a href="/bracket" class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/bracket' %}text-emerald-400{% else %}text-gray-400{% endif %}">Bracket</a>
-      <a href="/teams"   class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/teams' %}text-emerald-400{% else %}text-gray-400{% endif %}">Teams</a>
-      <a href="/history" class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/history' %}text-emerald-400{% else %}text-gray-400{% endif %}">History</a>
-      <a href="/rules"   class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap {% if request.path == '/rules' %}text-emerald-400{% else %}text-gray-400{% endif %}">Rules</a>
-      <a href="/admin"   class="text-sm hover:text-emerald-400 transition-colors flex-shrink-0 whitespace-nowrap ml-auto {% if request.path.startswith('/admin') %}text-emerald-400{% else %}text-gray-400{% endif %}">Admin</a>
+  <nav class="bg-gradient-to-r from-emerald-950/20 via-gray-900 to-gray-900 border-b border-gray-800 sticky top-0 z-10">
+    <div class="nav-strip max-w-6xl mx-auto px-4 py-2 flex items-center gap-1 overflow-x-auto">
+      <span class="font-bold text-emerald-400 text-sm tracking-tight flex-shrink-0 mr-3">⚽ LM Sweep</span>
+      <a href="/"        class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">League</a>
+      <a href="/scores"  class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path.startswith('/scores') %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Scores</a>
+      <a href="/groups"  class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/groups' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Groups</a>
+      <a href="/bracket" class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/bracket' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Bracket</a>
+      <a href="/teams"   class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/teams' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Teams</a>
+      <a href="/history" class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/history' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">History</a>
+      <a href="/rules"   class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg {% if request.path == '/rules' %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Rules</a>
+      <a href="/admin"   class="text-sm font-medium transition-all flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg ml-auto {% if request.path.startswith('/admin') %}text-emerald-400 bg-emerald-950/60{% else %}text-gray-400 hover:text-gray-200 hover:bg-gray-800/50{% endif %}">Admin</a>
     </div>
   </nav>
 
