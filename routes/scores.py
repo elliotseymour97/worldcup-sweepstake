@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import date
 from flask import Blueprint, render_template
 from sqlalchemy.orm import joinedload
-from models import Match, Country
+from models import db, Match, Country
 from api_client import fetch_and_sync, get_last_fetch
 from points import STAGE_LABELS
 
@@ -13,10 +13,15 @@ def _grouped_matches():
     # Sync inline so the response always reflects the latest data.
     # fetch_and_sync() throttles to one API call per 60 s, so most hits
     # return immediately from the in-memory cache.
+    # Rollback on failure: sync shares the request session; a commit error
+    # leaves the session invalid and the query below would raise PendingRollbackError.
     try:
         fetch_and_sync()
     except Exception:
-        pass
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
     all_matches = Match.query.options(
         joinedload(Match.home_country).joinedload(Country.player),
         joinedload(Match.away_country).joinedload(Country.player),
