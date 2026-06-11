@@ -91,8 +91,31 @@ def main():
             match.status = 'FINISHED'
             print(f"OK FINISHED: {home.name} {match.home_score}–{match.away_score} {away.name}")
 
+        elif cmd == 'fix':
+            from datetime import timedelta
+            cutoff = datetime.utcnow() - timedelta(minutes=5)
+            stale = [
+                m for m in Match.query.filter(Match.status.in_(['SCHEDULED', 'TIMED'])).all()
+                if m.kickoff and m.kickoff.replace(tzinfo=None) < cutoff
+            ]
+            if not stale:
+                print("No stale matches found (all past-kickoff matches already have a live/finished status).")
+                return
+            for m in stale:
+                print(f"Fixing: {m.home_team_name} vs {m.away_team_name} (kickoff {m.kickoff} UTC)")
+                m.status = 'IN_PLAY'
+                if m.home_score is None:
+                    m.home_score = 0
+                if m.away_score is None:
+                    m.away_score = 0
+                if not m.minute:
+                    m.minute = 1
+            db.session.commit()
+            print(f"OK Fixed {len(stale)} match(es) to IN_PLAY. Next API sync will update real scores.")
+            return
+
         else:
-            print(f"Unknown command: {cmd!r}. Use: live, goal, ht, finish, reset")
+            print(f"Unknown command: {cmd!r}. Use: live, goal, ht, finish, fix, reset")
             return
 
         db.session.commit()
