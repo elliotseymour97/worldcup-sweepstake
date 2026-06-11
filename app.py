@@ -1,14 +1,17 @@
 import json
 import os
 from flask import Flask
-from flask_compress import Compress
 from models import db
 from routes.main import main_bp
 from routes.scores import scores_bp
 from routes.admin import admin_bp
 from routes.teams import teams_bp
 
-compress = Compress()
+try:
+    from flask_compress import Compress
+    _compress = Compress()
+except ImportError:
+    _compress = None
 
 
 PLAYER_COLORS = ['emerald', 'blue', 'violet', 'amber', 'rose', 'cyan']
@@ -39,7 +42,8 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
-    compress.init_app(app)
+    if _compress:
+        _compress.init_app(app)
     db.init_app(app)
 
     app.register_blueprint(main_bp)
