@@ -29,7 +29,7 @@ def _grouped_matches():
     ).order_by(Match.kickoff.asc()).all()
     today = date.today()
 
-    live          = [m for m in all_matches if m.status in ('IN_PLAY', 'PAUSED')]
+    live          = [m for m in all_matches if m.status in ('IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT')]
     today_matches = [m for m in all_matches if m.status in ('SCHEDULED', 'TIMED')
                      and m.kickoff and m.kickoff.date() == today]
     future        = [m for m in all_matches if m.status in ('SCHEDULED', 'TIMED')

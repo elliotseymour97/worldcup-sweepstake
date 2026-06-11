@@ -1,16 +1,16 @@
 {% macro mini_match_row(m) %}
 {% set hp = m.home_country.player if (m.home_country and m.home_country.player) else none %}
 {% set ap = m.away_country.player if (m.away_country and m.away_country.player) else none %}
-<div class="bg-gray-900/50 border {% if m.status in ('IN_PLAY','PAUSED') %}card-live border-emerald-600/50{% else %}border-gray-800/60{% endif %} rounded-lg px-3 py-2 flex items-center gap-2 text-xs">
+<div class="bg-gray-900/50 border {% if m.status in ('IN_PLAY','PAUSED','EXTRA_TIME','PENALTY_SHOOTOUT') %}card-live border-emerald-600/50{% else %}border-gray-800/60{% endif %} rounded-lg px-3 py-2 flex items-center gap-2 text-xs">
   <div class="flex-1 flex items-center justify-end gap-1.5 min-w-0">
     {% if hp %}{% set hcn = player_color(hp.id) %}<span class="text-{{ hcn }}-400 font-semibold flex-shrink-0">{{ hp.name }}</span>{% endif %}
     <span class="text-gray-300 truncate">{{ m.home_country.name if m.home_country else m.home_team_name }}</span>
     {% if m.home_country %}<img src="{{ flag_url(m.home_country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">{% endif %}
   </div>
   <div class="flex-shrink-0 text-center w-20">
-    {% if m.status in ('IN_PLAY','PAUSED') %}
+    {% if m.status in ('IN_PLAY','PAUSED','EXTRA_TIME','PENALTY_SHOOTOUT') %}
     <span class="font-bold text-emerald-400">{{ m.home_score }}–{{ m.away_score }}</span>
-    <span class="block {% if m.status == 'PAUSED' %}text-amber-400{% else %}text-red-400{% endif %}">{% if m.status == 'PAUSED' %}HT{% else %}{{ m.minute }}'{% endif %}</span>
+    <span class="block {% if m.status == 'PAUSED' %}text-amber-400{% elif m.status == 'EXTRA_TIME' %}text-orange-400{% elif m.status == 'PENALTY_SHOOTOUT' %}text-purple-400{% else %}text-red-400{% endif %}">{% if m.status == 'PAUSED' %}HT{% elif m.status == 'EXTRA_TIME' %}ET{% elif m.status == 'PENALTY_SHOOTOUT' %}PSO{% else %}{{ m.minute }}'{% endif %}</span>
     {% elif m.status == 'FINISHED' %}
     <span class="font-bold text-gray-200">{{ m.home_score }}–{{ m.away_score }}</span>
     <span class="block text-gray-600">FT</span>

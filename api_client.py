@@ -166,6 +166,10 @@ def _sync_matches(api_matches: list) -> None:
             bookings.append({'minute': b_minute, 'player': player,
                              'is_home': team_id == home_api_id, 'card': card})
 
+        # Don't revert a match that's already live or finished back to scheduled
+        _active = {'IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT', 'FINISHED', 'SUSPENDED', 'POSTPONED'}
+        new_status = status if not (match.status in _active and status in ('SCHEDULED', 'TIMED')) else match.status
+
         match.home_team_name  = home_name
         match.away_team_name  = away_name
         match.home_team_id    = home_country.id if home_country else None
@@ -174,7 +178,7 @@ def _sync_matches(api_matches: list) -> None:
         match.away_score      = away_score
         match.stage           = stage
         match.group_name      = group_letter
-        match.status          = status
+        match.status          = new_status
         match.kickoff         = kickoff
         match.last_updated    = datetime.utcnow()
         match.minute          = m.get('minute')

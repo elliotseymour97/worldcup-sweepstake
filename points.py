@@ -34,7 +34,7 @@ STAGE_LABELS = {
 
 FURTHEST_LABELS = ['Groups', 'R32', 'R16', 'QF', 'SF', '3rd/Final', 'Final']
 
-_LIVE_STATUSES = ('IN_PLAY', 'PAUSED')
+_LIVE_STATUSES = ('IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT')
 
 
 def match_points_for_country(match, country, include_live=False):

@@ -44,9 +44,9 @@ def _todays_and_live():
     matches = Match.query.options(
         joinedload(Match.home_country).joinedload(Country.player),
         joinedload(Match.away_country).joinedload(Country.player),
-    ).filter(Match.status.in_(['IN_PLAY', 'PAUSED', 'SCHEDULED', 'TIMED'])
+    ).filter(Match.status.in_(['IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT', 'SCHEDULED', 'TIMED'])
     ).order_by(Match.kickoff.asc()).all()
-    live  = [m for m in matches if m.status in ('IN_PLAY', 'PAUSED')]
+    live  = [m for m in matches if m.status in ('IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT')]
     today_ = [m for m in matches if m.status in ('SCHEDULED', 'TIMED')
                and m.kickoff and m.kickoff.date() == today]
     return live, today_

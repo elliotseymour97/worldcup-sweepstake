@@ -31,10 +31,14 @@
     </div>
     {% if match.status == 'PAUSED' %}
     <span class="mt-1 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">HT</span>
+    {% elif match.status == 'EXTRA_TIME' %}
+    <span class="mt-1 bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">ET</span>
+    {% elif match.status == 'PENALTY_SHOOTOUT' %}
+    <span class="mt-1 bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">PSO</span>
     {% else %}
     <span class="mt-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
     {% endif %}
-    {% if match.minute %}
+    {% if match.minute and match.status not in ('PENALTY_SHOOTOUT',) %}
     <div class="text-xs text-gray-500 mt-0.5">{{ match.minute }}'</div>
     {% endif %}
   {% elif match.status == 'FINISHED' %}
@@ -55,7 +59,7 @@
 
 
 {% macro match_card(match) %}
-{% set is_live     = match.status in ('IN_PLAY', 'PAUSED') %}
+{% set is_live     = match.status in ('IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT') %}
 {% set is_finished = match.status == 'FINISHED' %}
 {% set has_score   = match.home_score is not none and match.away_score is not none %}
 {% set home_winning = has_score and match.home_score > match.away_score %}
