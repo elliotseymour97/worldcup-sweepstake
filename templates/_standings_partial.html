@@ -10,7 +10,7 @@
   <div class="flex-shrink-0 text-center w-20">
     {% if m.status in ('IN_PLAY','PAUSED','EXTRA_TIME','PENALTY_SHOOTOUT') %}
     <span class="font-bold text-emerald-400">{{ m.home_score }}–{{ m.away_score }}</span>
-    <span class="block {% if m.status == 'PAUSED' %}text-amber-400{% elif m.status == 'EXTRA_TIME' %}text-orange-400{% elif m.status == 'PENALTY_SHOOTOUT' %}text-purple-400{% else %}text-red-400{% endif %}">{% if m.status == 'PAUSED' %}HT{% elif m.status == 'EXTRA_TIME' %}ET{% elif m.status == 'PENALTY_SHOOTOUT' %}PSO{% else %}{{ m.minute }}'{% endif %}</span>
+    <span class="block {% if m.status == 'PAUSED' %}text-amber-400{% elif m.status == 'EXTRA_TIME' %}text-orange-400{% elif m.status == 'PENALTY_SHOOTOUT' %}text-purple-400{% else %}text-red-400{% endif %}">{% if m.status == 'PAUSED' %}HT{% elif m.status == 'EXTRA_TIME' %}ET{% elif m.status == 'PENALTY_SHOOTOUT' %}PSO{% elif m.minute %}{{ m.minute }}'{% else %}LIVE{% endif %}</span>
     {% elif m.status == 'FINISHED' %}
     <span class="font-bold text-gray-200">{{ m.home_score }}–{{ m.away_score }}</span>
     <span class="block text-gray-600">FT</span>
