@@ -76,7 +76,10 @@ def fetch_and_sync() -> tuple[bool, str]:
 
     matches = data.get('matches', [])
     _sync_matches(matches)
-    _maybe_snapshot()
+    try:
+        _maybe_snapshot()
+    except Exception:
+        pass
     _last_fetch = now
     return True, f'Synced {len(matches)} matches.'
 

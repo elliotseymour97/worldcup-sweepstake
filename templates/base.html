@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}LM Sweepstake 2026{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#34d399">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,8 +30,8 @@
     /* Hide scrollbar on nav strip */
     .nav-strip { scrollbar-width:none; -ms-overflow-style:none; }
     .nav-strip::-webkit-scrollbar { display:none; }
-    body { font-family:'Inter',system-ui,sans-serif; background:radial-gradient(ellipse 100% 40% at 50% -5%, rgba(6,78,59,0.13) 0%, transparent 60%), #030712; }
-    .score-num { font-family:'Barlow Condensed',sans-serif; letter-spacing:0.03em; }
+    body { font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:radial-gradient(ellipse 100% 40% at 50% -5%, rgba(6,78,59,0.13) 0%, transparent 60%), #030712; }
+    .score-num { font-weight:800; letter-spacing:0.04em; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
     main { animation:fadeIn 0.18s ease-out; }
     .htmx-request { opacity:0.5; transition:opacity 200ms; pointer-events:none; }

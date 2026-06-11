@@ -13,8 +13,11 @@ scores_bp = Blueprint('scores', __name__)
 def _trigger_sync():
     app = current_app._get_current_object()
     def _run():
-        with app.app_context():
-            fetch_and_sync()
+        try:
+            with app.app_context():
+                fetch_and_sync()
+        except Exception:
+            pass
     threading.Thread(target=_run, daemon=True).start()
 
 
