@@ -120,10 +120,14 @@
   {% set hcn = player_color(home_player.id) %}
   {% set acn = player_color(away_player.id) %}
   <div class="border-t border-gray-800 mt-2 pt-2 flex items-center justify-center gap-2 text-xs">
-    <span class="text-gray-600">cheer for</span>
+    {% if home_player.id == away_player.id %}
     <span class="px-2 py-0.5 rounded-full bg-{{ hcn }}-950/60 border border-{{ hcn }}-800/50 text-{{ hcn }}-400 font-semibold">{{ home_player.name }}</span>
-    <span class="text-gray-700">vs</span>
+    <span class="text-gray-500">both teams</span>
+    {% else %}
+    <span class="px-2 py-0.5 rounded-full bg-{{ hcn }}-950/60 border border-{{ hcn }}-800/50 text-{{ hcn }}-400 font-semibold">{{ home_player.name }}</span>
+    <span class="text-gray-600">⚔️</span>
     <span class="px-2 py-0.5 rounded-full bg-{{ acn }}-950/60 border border-{{ acn }}-800/50 text-{{ acn }}-400 font-semibold">{{ away_player.name }}</span>
+    {% endif %}
   </div>
   {% endif %}
 
