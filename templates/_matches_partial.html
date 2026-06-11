@@ -61,6 +61,8 @@
 {% set home_winning = has_score and match.home_score > match.away_score %}
 {% set away_winning = has_score and match.away_score > match.home_score %}
 {% set active = is_live or is_finished %}
+{% set home_player = match.home_country.player if (match.home_country and match.home_country.player) else none %}
+{% set away_player = match.away_country.player if (match.away_country and match.away_country.player) else none %}
 
 <div class="bg-gray-900 border rounded-xl px-4 py-3
   {% if is_live %}card-live border-emerald-500{% else %}border-gray-800{% endif %}"
@@ -111,6 +113,17 @@
       <div class="text-red-400"><span class="text-xs">(RC)</span> {{ c.player }} <span class="text-gray-500">{{ c.minute }}'</span></div>
       {% endfor %}
     </div>
+  </div>
+  {% endif %}
+
+  {% if home_player and away_player %}
+  {% set hcn = player_color(home_player.id) %}
+  {% set acn = player_color(away_player.id) %}
+  <div class="border-t border-gray-800 mt-2 pt-2 flex items-center justify-center gap-2 text-xs">
+    <span class="text-gray-600">cheer for</span>
+    <span class="px-2 py-0.5 rounded-full bg-{{ hcn }}-950/60 border border-{{ hcn }}-800/50 text-{{ hcn }}-400 font-semibold">{{ home_player.name }}</span>
+    <span class="text-gray-700">vs</span>
+    <span class="px-2 py-0.5 rounded-full bg-{{ acn }}-950/60 border border-{{ acn }}-800/50 text-{{ acn }}-400 font-semibold">{{ away_player.name }}</span>
   </div>
   {% endif %}
 

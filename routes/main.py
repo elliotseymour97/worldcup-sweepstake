@@ -5,6 +5,12 @@ from sqlalchemy.orm import subqueryload, joinedload
 from models import Player, Country, Match
 from points import player_standings, country_stats, STAGE_LABELS, ROUND_ORDER
 
+_PLAYER_COLORS = ['emerald', 'blue', 'violet', 'amber', 'rose', 'cyan']
+_COLOR_HEX = {
+    'emerald': '#10b981', 'blue': '#3b82f6', 'violet': '#8b5cf6',
+    'amber':   '#f59e0b', 'rose': '#f43f5e', 'cyan':   '#06b6d4',
+}
+
 main_bp = Blueprint('main', __name__)
 
 _cache = {'standings': None, 'at': 0.0}
@@ -19,10 +25,31 @@ def _build_standings():
         return _cache['standings']
     standings = player_standings(include_live=True)
     for row in standings:
-        row['country_stats'] = {c.id: country_stats(c) for c in row['player'].countries}
+        cstats = {}
+        for c in row['player'].countries:
+            cs = country_stats(c)
+            all_m = c.home_matches + c.away_matches
+            has_played   = any(m.status == 'FINISHED' for m in all_m)
+            has_upcoming = any(m.status in ('SCHEDULED', 'TIMED') for m in all_m)
+            cs['eliminated'] = has_played and not has_upcoming
+            cstats[c.id] = cs
+        row['country_stats'] = cstats
     _cache['standings'] = standings
     _cache['at'] = now
     return standings
+
+
+def _todays_and_live():
+    today = _date.today()
+    matches = Match.query.options(
+        joinedload(Match.home_country).joinedload(Country.player),
+        joinedload(Match.away_country).joinedload(Country.player),
+    ).filter(Match.status.in_(['IN_PLAY', 'PAUSED', 'SCHEDULED', 'TIMED'])
+    ).order_by(Match.kickoff.asc()).all()
+    live  = [m for m in matches if m.status in ('IN_PLAY', 'PAUSED')]
+    today_ = [m for m in matches if m.status in ('SCHEDULED', 'TIMED')
+               and m.kickoff and m.kickoff.date() == today]
+    return live, today_
 
 
 def invalidate_standings_cache():
@@ -31,12 +58,49 @@ def invalidate_standings_cache():
 
 @main_bp.route('/')
 def league():
-    return render_template('league.html', standings=_build_standings())
+    live, today = _todays_and_live()
+    return render_template('league.html', standings=_build_standings(),
+                           live_matches=live, today_matches=today)
 
 
 @main_bp.route('/league/standings')
 def league_standings():
-    return render_template('_standings_partial.html', standings=_build_standings())
+    live, today = _todays_and_live()
+    return render_template('_standings_partial.html', standings=_build_standings(),
+                           live_matches=live, today_matches=today)
+
+
+@main_bp.route('/history')
+def history():
+    from models import StandingsSnapshot
+    from sqlalchemy import func
+
+    players = Player.query.all()
+    snapshots = StandingsSnapshot.query.order_by(
+        StandingsSnapshot.taken_at.asc()).all()
+
+    if not players or not snapshots:
+        return render_template('history.html', labels=[], datasets=[])
+
+    seen = {}
+    for s in snapshots:
+        key = s.taken_at.strftime('%d %b %H:%M')
+        if key not in seen:
+            seen[key] = s.taken_at
+    labels = list(seen.keys())
+
+    datasets = []
+    for p in players:
+        cn = _PLAYER_COLORS[p.id % len(_PLAYER_COLORS)]
+        snap_map = {s.taken_at.strftime('%d %b %H:%M'): s.points
+                    for s in snapshots if s.player_id == p.id}
+        datasets.append({
+            'name':  p.name,
+            'color': _COLOR_HEX.get(cn, '#6b7280'),
+            'data':  [snap_map.get(lbl) for lbl in labels],
+        })
+
+    return render_template('history.html', labels=labels, datasets=datasets)
 
 
 @main_bp.route('/rules')

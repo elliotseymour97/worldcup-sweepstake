@@ -1,3 +1,31 @@
+{% macro mini_match_row(m) %}
+{% set hp = m.home_country.player if (m.home_country and m.home_country.player) else none %}
+{% set ap = m.away_country.player if (m.away_country and m.away_country.player) else none %}
+<div class="bg-gray-900/50 border {% if m.status in ('IN_PLAY','PAUSED') %}card-live border-emerald-600/50{% else %}border-gray-800/60{% endif %} rounded-lg px-3 py-2 flex items-center gap-2 text-xs">
+  <div class="flex-1 flex items-center justify-end gap-1.5 min-w-0">
+    {% if hp %}{% set hcn = player_color(hp.id) %}<span class="text-{{ hcn }}-400 font-semibold flex-shrink-0">{{ hp.name }}</span>{% endif %}
+    <span class="text-gray-300 truncate">{{ m.home_country.name if m.home_country else m.home_team_name }}</span>
+    {% if m.home_country %}<img src="{{ flag_url(m.home_country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">{% endif %}
+  </div>
+  <div class="flex-shrink-0 text-center w-20">
+    {% if m.status in ('IN_PLAY','PAUSED') %}
+    <span class="font-bold text-emerald-400">{{ m.home_score }}–{{ m.away_score }}</span>
+    <span class="block {% if m.status == 'PAUSED' %}text-amber-400{% else %}text-red-400{% endif %}">{% if m.status == 'PAUSED' %}HT{% else %}{{ m.minute }}'{% endif %}</span>
+    {% elif m.status == 'FINISHED' %}
+    <span class="font-bold text-gray-200">{{ m.home_score }}–{{ m.away_score }}</span>
+    <span class="block text-gray-600">FT</span>
+    {% else %}
+    {% if m.kickoff %}<time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-gray-400">{{ m.kickoff.strftime('%H:%M') }}</time>{% else %}<span class="text-gray-600">TBC</span>{% endif %}
+    {% endif %}
+  </div>
+  <div class="flex-1 flex items-center gap-1.5 min-w-0">
+    {% if m.away_country %}<img src="{{ flag_url(m.away_country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">{% endif %}
+    <span class="text-gray-300 truncate">{{ m.away_country.name if m.away_country else m.away_team_name }}</span>
+    {% if ap %}{% set acn = player_color(ap.id) %}<span class="text-{{ acn }}-400 font-semibold flex-shrink-0">{{ ap.name }}</span>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
 {% if standings %}
 
 {% set any_live = standings | selectattr('has_live') | list | length > 0 %}
@@ -51,6 +79,34 @@
   <div class="flex-1"></div>
   {% endif %}
 
+</div>
+{% endif %}
+
+{# ── Live & Today matches on the league dashboard ── #}
+{% if live_matches or today_matches %}
+<div class="mb-6 space-y-4">
+  {% if live_matches %}
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block"></span>
+      <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Live Now</span>
+    </div>
+    <div class="space-y-1.5">
+      {% for m in live_matches %}{{ mini_match_row(m) }}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if today_matches %}
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+      <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">Today's Fixtures</span>
+    </div>
+    <div class="space-y-1.5">
+      {% for m in today_matches %}{{ mini_match_row(m) }}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -144,13 +200,14 @@
     <div class="space-y-1.5">
       {% for country in row.player.countries | sort(attribute='tier') %}
       {% set stats = row.country_stats[country.id] %}
-      <div class="flex items-center justify-between text-sm">
+      <div class="flex items-center justify-between text-sm {% if stats.eliminated %}opacity-40{% endif %}">
         <span class="flex items-center gap-2">
           <span class="tier-badge-{{ country.tier }} text-xs font-bold px-1.5 py-0.5 rounded">×{{ country.multiplier }}</span>
           <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
           <span class="{% if stats.furthest == 0 %}text-gray-500{% else %}text-gray-200{% endif %}">
             {{ country.name }}
           </span>
+          {% if stats.eliminated %}<span class="text-xs text-red-800 font-medium">(out)</span>{% endif %}
         </span>
         <span class="text-gray-400 text-xs font-mono tabular-nums">{{ '%.2f'|format(stats.points) }}</span>
       </div>

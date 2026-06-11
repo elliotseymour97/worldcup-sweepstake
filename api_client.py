@@ -76,8 +76,38 @@ def fetch_and_sync() -> tuple[bool, str]:
 
     matches = data.get('matches', [])
     _sync_matches(matches)
+    _maybe_snapshot()
     _last_fetch = now
     return True, f'Synced {len(matches)} matches.'
+
+
+def _maybe_snapshot() -> None:
+    from models import StandingsSnapshot, db
+    from points import player_standings
+    from sqlalchemy import func
+
+    standings = player_standings()
+    if not standings:
+        return
+
+    current = {row['player'].id: round(row['points'], 4) for row in standings}
+
+    last_time = db.session.query(func.max(StandingsSnapshot.taken_at)).scalar()
+    if last_time:
+        last = {s.player_id: round(s.points, 4)
+                for s in StandingsSnapshot.query.filter_by(taken_at=last_time).all()}
+        if last == current:
+            return
+
+    now = datetime.utcnow()
+    for row in standings:
+        db.session.add(StandingsSnapshot(
+            taken_at=now,
+            player_id=row['player'].id,
+            points=row['points'],
+            rank=row['rank'],
+        ))
+    db.session.commit()
 
 
 def _sync_matches(api_matches: list) -> None:

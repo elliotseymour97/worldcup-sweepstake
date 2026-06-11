@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Points History — LM Sweep 2026{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-100">Points History</h1>
+  <p class="text-gray-500 text-sm mt-1">Standings snapshot at each sync where points changed.</p>
+</div>
+
+{% if not labels %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+  <p class="text-gray-400 text-lg mb-2">No history yet.</p>
+  <p class="text-gray-500 text-sm">Points history builds up as matches are played. Check back once the tournament starts.</p>
+</div>
+{% else %}
+<div class="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6">
+  <div style="position:relative;height:420px;">
+    <canvas id="historyChart"></canvas>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+  const labels   = {{ labels | tojson }};
+  const datasets = {{ datasets | tojson }};
+
+  new Chart(document.getElementById('historyChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: datasets.map(d => ({
+        label:            d.name,
+        data:             d.data,
+        borderColor:      d.color,
+        backgroundColor:  d.color + '22',
+        fill:             false,
+        tension:          0.3,
+        pointRadius:      3,
+        pointHoverRadius: 6,
+        spanGaps:         true,
+      }))
+    },
+    options: {
+      responsive:          true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#9ca3af', font: { size: 12 }, padding: 16 }
+        },
+        tooltip: {
+          backgroundColor: '#111827',
+          borderColor:     '#374151',
+          borderWidth:     1,
+          titleColor:      '#d1d5db',
+          bodyColor:       '#9ca3af',
+          padding:         10,
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + ' pts' : '–'),
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9ca3af', maxRotation: 45, autoSkip: true, maxTicksLimit: 14, font: { size: 11 } },
+          grid:  { color: '#1f2937' }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#9ca3af', callback: v => v.toFixed(1), font: { size: 11 } },
+          grid:  { color: '#1f2937' }
+        }
+      }
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}

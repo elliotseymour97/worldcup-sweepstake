@@ -83,3 +83,15 @@ class Match(db.Model):
 
     def __repr__(self):
         return f'<Match {self.home_team_name} vs {self.away_team_name}>'
+
+
+class StandingsSnapshot(db.Model):
+    __tablename__ = 'standings_snapshots'
+
+    id        = db.Column(db.Integer, primary_key=True)
+    taken_at  = db.Column(db.DateTime, nullable=False, index=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id'), nullable=False)
+    points    = db.Column(db.Float, default=0.0)
+    rank      = db.Column(db.Integer)
+
+    player = db.relationship('Player')
