@@ -174,14 +174,19 @@ def _sync_matches(api_matches: list) -> None:
         match.away_team_name  = away_name
         match.home_team_id    = home_country.id if home_country else None
         match.away_team_id    = away_country.id if away_country else None
-        match.home_score      = home_score
-        match.away_score      = away_score
+        # Never overwrite a real score/minute with None (API glitches return null during status blips)
+        if home_score is not None:
+            match.home_score = home_score
+        if away_score is not None:
+            match.away_score = away_score
+        api_minute = m.get('minute')
+        if api_minute is not None:
+            match.minute = api_minute
         match.stage           = stage
         match.group_name      = group_letter
         match.status          = new_status
         match.kickoff         = kickoff
         match.last_updated    = datetime.utcnow()
-        match.minute          = m.get('minute')
         match.goals_json      = json.dumps(goals) if goals else None
         match.bookings_json   = json.dumps(bookings) if bookings else None
 
