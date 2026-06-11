@@ -61,8 +61,8 @@ def fetch_and_sync() -> tuple[bool, str]:
         return False, 'No API key configured — add FOOTBALL_DATA_API_KEY to your .env file.'
 
     now = datetime.utcnow()
-    if _last_fetch and (now - _last_fetch) < timedelta(seconds=60):
-        return True, 'Data is fresh (last synced < 60 s ago).'
+    if _last_fetch and (now - _last_fetch) < timedelta(seconds=30):
+        return True, 'Data is fresh (last synced < 30 s ago).'
 
     competition = current_app.config.get('COMPETITION_CODE', 'WC')
     url = f'https://api.football-data.org/v4/competitions/{competition}/matches'
