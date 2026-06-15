@@ -27,7 +27,7 @@
 
 <div id="match-data"
      hx-get="/scores/live"
-     hx-trigger="load delay:3s, every 30s"
+     hx-trigger="load delay:3s, every 15s"
      hx-swap="innerHTML">
   {% include '_matches_partial.html' %}
 </div>
@@ -128,7 +128,7 @@
   function _startRefreshCountdown() {
     const el = document.getElementById('refresh-timer');
     if (_refreshInterval) clearInterval(_refreshInterval);
-    let secs = 30;
+    let secs = 15;
     if (el) el.textContent = `· ${secs}s`;
     _refreshInterval = setInterval(() => {
       secs--;
