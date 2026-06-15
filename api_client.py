@@ -80,6 +80,12 @@ def fetch_and_sync() -> tuple[bool, str]:
         _maybe_snapshot()
     except Exception:
         pass
+    # Bust the in-process standings cache so the next league poll reflects new data
+    try:
+        from routes.main import invalidate_standings_cache
+        invalidate_standings_cache()
+    except Exception:
+        pass
     _last_fetch = now
     return True, f'Synced {len(matches)} matches.'
 
@@ -166,22 +172,30 @@ def _sync_matches(api_matches: list) -> None:
             bookings.append({'minute': b_minute, 'player': player,
                              'is_home': team_id == home_api_id, 'card': card})
 
-        # Don't revert a match that's already live or finished back to scheduled
+        # Prevent status regressions caused by API glitches:
+        #   active/finished → SCHEDULED/TIMED  (API sends wrong status mid-match)
+        #   FINISHED → any live status          (API briefly re-opens a finished match)
         _active = {'IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT', 'FINISHED', 'SUSPENDED', 'POSTPONED'}
-        new_status = status if not (match.status in _active and status in ('SCHEDULED', 'TIMED')) else match.status
+        _live   = {'IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'}
+        is_regression = (
+            (match.status in _active and status in ('SCHEDULED', 'TIMED')) or
+            (match.status == 'FINISHED' and status in _live)
+        )
+        new_status = match.status if is_regression else status
 
         match.home_team_name  = home_name
         match.away_team_name  = away_name
         match.home_team_id    = home_country.id if home_country else None
         match.away_team_id    = away_country.id if away_country else None
-        # Never overwrite a real score/minute with None (API glitches return null during status blips)
-        if home_score is not None:
-            match.home_score = home_score
-        if away_score is not None:
-            match.away_score = away_score
-        api_minute = m.get('minute')
-        if api_minute is not None:
-            match.minute = api_minute
+        # On a regression the existing scores/minute are correct — skip the update entirely
+        if not is_regression:
+            if home_score is not None:
+                match.home_score = home_score
+            if away_score is not None:
+                match.away_score = away_score
+            api_minute = m.get('minute')
+            if api_minute is not None:
+                match.minute = api_minute
         match.stage           = stage
         match.group_name      = group_letter
         match.status          = new_status

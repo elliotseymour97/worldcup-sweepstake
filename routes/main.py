@@ -1,8 +1,10 @@
+import threading
 import time
 from datetime import datetime, date as _date
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, current_app
 from sqlalchemy.orm import subqueryload, joinedload
 from models import Player, Country, Match
+from api_client import fetch_and_sync
 from points import player_standings, country_stats, STAGE_LABELS, ROUND_ORDER
 
 _PLAYER_COLORS = ['emerald', 'blue', 'violet', 'amber', 'rose', 'cyan']
@@ -16,6 +18,17 @@ main_bp = Blueprint('main', __name__)
 _cache = {'standings': None, 'at': 0.0}
 _CACHE_TTL = 30
 
+
+def _trigger_sync():
+    app = current_app._get_current_object()
+    def _run():
+        try:
+            with app.app_context():
+                fetch_and_sync()
+        except Exception:
+            pass
+    threading.Thread(target=_run, daemon=True).start()
+
 KNOCKOUT_STAGES = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL']
 
 
@@ -27,7 +40,7 @@ def _build_standings():
     for row in standings:
         cstats = {}
         for c in row['player'].countries:
-            cs = country_stats(c)
+            cs = country_stats(c, include_live=True)
             all_m = c.home_matches + c.away_matches
             has_played   = any(m.status == 'FINISHED' for m in all_m)
             has_upcoming = any(m.status in ('SCHEDULED', 'TIMED') for m in all_m)
@@ -65,6 +78,7 @@ def league():
 
 @main_bp.route('/league/standings')
 def league_standings():
+    _trigger_sync()
     live, today = _todays_and_live()
     return render_template('_standings_partial.html', standings=_build_standings(),
                            live_matches=live, today_matches=today)
