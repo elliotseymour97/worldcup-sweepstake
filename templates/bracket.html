@@ -28,19 +28,23 @@
     {% set home_wins = has_score and m.home_score > m.away_score %}
     {% set away_wins = has_score and m.away_score > m.home_score %}
 
-    <div class="bg-gray-900 border rounded-xl px-4 py-3
-      {{ 'card-live border-emerald-500' if is_live else 'border-gray-800' }}">
+    <div class="border rounded-xl px-4 py-3
+      {% if is_live %}card-live border-emerald-500 bg-gray-900
+      {% elif is_finished %}border-gray-700/60 bg-gray-900/50
+      {% else %}border-gray-800 bg-gray-900{% endif %}">
       <div class="flex items-center gap-3">
 
         {# Home team #}
-        <div class="flex-1 text-center">
+        <div class="flex-1 text-center {% if is_finished and away_wins %}opacity-40{% endif %}">
           {% if m.home_country %}
-          <div class="font-semibold text-sm
-            {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-500' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
-            {{ m.home_country.name }}
+          <div class="flex items-center justify-center gap-1 mb-0.5">
+            {% if is_finished and home_wins %}<span class="text-emerald-400 text-xs font-bold">✓</span>{% endif %}
+            <span class="font-semibold text-sm {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
+              {{ m.home_country.name }}
+            </span>
           </div>
           {% if m.home_country.player %}
-          <div class="flex items-center justify-center gap-1 mt-1">
+          <div class="flex items-center justify-center gap-1">
             <span class="tier-badge-{{ m.home_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.home_country.multiplier }}</span>
             <span class="text-xs text-gray-500">{{ m.home_country.player.name }}</span>
           </div>
@@ -53,13 +57,16 @@
         </div>
 
         {# Score / time #}
-        <div class="w-28 text-center flex flex-col items-center">
+        <div class="w-28 text-center flex flex-col items-center flex-shrink-0">
           {% if is_live %}
-          <div class="text-2xl font-bold text-emerald-400 tabular-nums">{{ m.home_score }}–{{ m.away_score }}</div>
+          <div class="text-2xl font-bold text-emerald-400 tabular-nums score-num">{{ m.home_score }}–{{ m.away_score }}</div>
           <span class="mt-0.5 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
           {% elif is_finished %}
-          <div class="text-2xl font-bold text-gray-100 tabular-nums">{{ m.home_score }}–{{ m.away_score }}</div>
-          <span class="mt-0.5 text-xs text-gray-600 font-medium">FT</span>
+          <div class="text-xl font-bold text-gray-100 tabular-nums score-num">{{ m.home_score }}–{{ m.away_score }}</div>
+          <span class="text-xs text-gray-600 font-medium">FT</span>
+          {% if m.kickoff %}
+          <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-xs text-gray-700 mt-0.5">{{ m.kickoff.strftime('%d %b') }}</time>
+          {% endif %}
           {% elif m.kickoff %}
           <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-sm text-gray-400">
             {{ m.kickoff.strftime('%d %b %H:%M') }}
@@ -70,14 +77,16 @@
         </div>
 
         {# Away team #}
-        <div class="flex-1 text-center">
+        <div class="flex-1 text-center {% if is_finished and home_wins %}opacity-40{% endif %}">
           {% if m.away_country %}
-          <div class="font-semibold text-sm
-            {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-500' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
-            {{ m.away_country.name }}
+          <div class="flex items-center justify-center gap-1 mb-0.5">
+            <span class="font-semibold text-sm {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
+              {{ m.away_country.name }}
+            </span>
+            {% if is_finished and away_wins %}<span class="text-emerald-400 text-xs font-bold">✓</span>{% endif %}
           </div>
           {% if m.away_country.player %}
-          <div class="flex items-center justify-center gap-1 mt-1">
+          <div class="flex items-center justify-center gap-1">
             <span class="tier-badge-{{ m.away_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.away_country.multiplier }}</span>
             <span class="text-xs text-gray-500">{{ m.away_country.player.name }}</span>
           </div>
