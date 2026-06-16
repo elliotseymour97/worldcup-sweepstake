@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+import time
 from flask import Flask
 from models import db
 from routes.main import main_bp
@@ -59,7 +61,26 @@ def create_app(test_config=None):
         _migrate_db()
         _seed_countries()
 
+    _start_sync_worker(app)
     return app
+
+
+def _start_sync_worker(app):
+    """Start a single background thread that syncs from the API every 30 seconds.
+    This replaces per-request background threads, which had race conditions and
+    silent failures with no visibility into errors."""
+    def _worker():
+        time.sleep(5)  # let the app finish starting up
+        while True:
+            try:
+                with app.app_context():
+                    from api_client import _do_sync
+                    _do_sync()
+            except Exception:
+                pass
+            time.sleep(30)
+    t = threading.Thread(target=_worker, daemon=True, name='api-sync')
+    t.start()
 
 
 def _migrate_db():

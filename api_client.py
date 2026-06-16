@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import requests
 from datetime import datetime, timedelta
 from typing import Optional
@@ -9,6 +10,8 @@ from flask import current_app
 from models import db, Country, Match
 
 _last_fetch: Optional[datetime] = None
+_last_error: Optional[str]      = None
+_sync_lock  = threading.Lock()
 
 STAGE_MAP = {
     'GROUP_STAGE':    'GROUP_STAGE',
@@ -22,14 +25,12 @@ STAGE_MAP = {
 
 
 def _normalise(s: str) -> str:
-    """Collapse name variants: 'Bosnia-Herzegovina', 'Bosnia & Herzegovina',
-    'Bosnia and Herzegovina' all become 'bosnia herzegovina'."""
     if not s:
         return ''
     s = s.strip().lower()
-    s = s.replace('-', ' ')           # hyphen → space
-    s = s.replace('&', 'and')         # & → and
-    s = re.sub(r'\s+and\s+', ' ', s)  # " and " connector → single space
+    s = s.replace('-', ' ')
+    s = s.replace('&', 'and')
+    s = re.sub(r'\s+and\s+', ' ', s)
     return re.sub(r'\s+', ' ', s).strip()
 
 
@@ -38,11 +39,9 @@ def _find_country(api_name: str) -> Optional[Country]:
         return None
     needle = _normalise(api_name)
     all_countries = Country.query.all()
-    # Pass 1: match on normalised api_name
     for c in all_countries:
         if _normalise(c.api_name) == needle:
             return c
-    # Pass 2: match on normalised display name
     for c in all_countries:
         if _normalise(c.name) == needle:
             return c
@@ -53,41 +52,67 @@ def get_last_fetch() -> Optional[datetime]:
     return _last_fetch
 
 
+def get_last_error() -> Optional[str]:
+    return _last_error
+
+
 def fetch_and_sync() -> tuple[bool, str]:
-    global _last_fetch
-
-    api_key = current_app.config.get('FOOTBALL_DATA_API_KEY', '')
-    if not api_key:
-        return False, 'No API key configured — add FOOTBALL_DATA_API_KEY to your .env file.'
-
+    """Public entry point used by the admin manual refresh. Respects the 30-s throttle."""
     now = datetime.utcnow()
     if _last_fetch and (now - _last_fetch) < timedelta(seconds=30):
-        return True, 'Data is fresh (last synced < 30 s ago).'
+        secs = int((now - _last_fetch).total_seconds())
+        return True, f'Data is fresh (last synced {secs}s ago).'
+    return _do_sync()
 
-    competition = current_app.config.get('COMPETITION_CODE', 'WC')
-    url = f'https://api.football-data.org/v4/competitions/{competition}/matches'
+
+def _do_sync() -> tuple[bool, str]:
+    """Call the football-data API and write results to the DB.
+    Protected by a lock so only one sync runs at a time."""
+    global _last_fetch, _last_error
+
+    if not _sync_lock.acquire(blocking=False):
+        return True, 'Sync already in progress.'
 
     try:
-        resp = requests.get(url, headers={'X-Auth-Token': api_key}, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
-    except requests.RequestException as e:
-        return False, f'API request failed: {e}'
+        api_key = current_app.config.get('FOOTBALL_DATA_API_KEY', '')
+        if not api_key:
+            _last_error = 'No API key configured.'
+            return False, _last_error
 
-    matches = data.get('matches', [])
-    _sync_matches(matches)
-    try:
-        _maybe_snapshot()
-    except Exception:
-        pass
-    # Bust the in-process standings cache so the next league poll reflects new data
-    try:
-        from routes.main import invalidate_standings_cache
-        invalidate_standings_cache()
-    except Exception:
-        pass
-    _last_fetch = now
-    return True, f'Synced {len(matches)} matches.'
+        competition = current_app.config.get('COMPETITION_CODE', 'WC')
+        url = f'https://api.football-data.org/v4/competitions/{competition}/matches'
+
+        try:
+            resp = requests.get(url, headers={'X-Auth-Token': api_key}, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.RequestException as e:
+            _last_error = f'API request failed: {e}'
+            return False, _last_error
+
+        matches = data.get('matches', [])
+        _sync_matches(matches)
+
+        try:
+            _maybe_snapshot()
+        except Exception:
+            pass
+
+        try:
+            from routes.main import invalidate_standings_cache
+            invalidate_standings_cache()
+        except Exception:
+            pass
+
+        _last_fetch = datetime.utcnow()
+        _last_error = None
+        return True, f'Synced {len(matches)} matches.'
+
+    except Exception as e:
+        _last_error = f'Sync error: {e}'
+        return False, _last_error
+    finally:
+        _sync_lock.release()
 
 
 def _maybe_snapshot() -> None:
@@ -139,7 +164,7 @@ def _sync_matches(api_matches: list) -> None:
             except ValueError:
                 pass
 
-        group_raw  = m.get('group') or ''
+        group_raw    = m.get('group') or ''
         group_letter = group_raw.replace('GROUP_', '') if group_raw.startswith('GROUP_') else None
 
         home_country = _find_country(home_name)
@@ -154,23 +179,20 @@ def _sync_matches(api_matches: list) -> None:
 
         goals = []
         for g in (m.get('goals') or []):
-            minute    = g.get('minute', 0)
-            inj       = g.get('injuryTime')
-            disp_min  = f"{minute}+{inj}" if inj else str(minute)
-            scorer    = (g.get('scorer') or {}).get('name') or '?'
-            team_id   = (g.get('team') or {}).get('id')
-            goal_type = g.get('type', 'REGULAR')
+            minute   = g.get('minute', 0)
+            inj      = g.get('injuryTime')
+            disp_min = f"{minute}+{inj}" if inj else str(minute)
+            scorer   = (g.get('scorer') or {}).get('name') or '?'
+            team_id  = (g.get('team') or {}).get('id')
             goals.append({'minute': disp_min, 'scorer': scorer,
-                          'is_home': team_id == home_api_id, 'type': goal_type})
+                          'is_home': team_id == home_api_id, 'type': g.get('type', 'REGULAR')})
 
         bookings = []
         for b in (m.get('bookings') or []):
-            b_minute = b.get('minute', 0)
-            player   = (b.get('player') or {}).get('name') or '?'
-            team_id  = (b.get('team') or {}).get('id')
-            card     = b.get('card', '')
-            bookings.append({'minute': b_minute, 'player': player,
-                             'is_home': team_id == home_api_id, 'card': card})
+            team_id = (b.get('team') or {}).get('id')
+            bookings.append({'minute': b.get('minute', 0),
+                             'player': (b.get('player') or {}).get('name') or '?',
+                             'is_home': team_id == home_api_id, 'card': b.get('card', '')})
 
         # Prevent status regressions caused by API glitches:
         #   active/finished → SCHEDULED/TIMED  (API sends wrong status mid-match)
@@ -183,11 +205,17 @@ def _sync_matches(api_matches: list) -> None:
         )
         new_status = match.status if is_regression else status
 
-        match.home_team_name  = home_name
-        match.away_team_name  = away_name
-        match.home_team_id    = home_country.id if home_country else None
-        match.away_team_id    = away_country.id if away_country else None
-        # On a regression the existing scores/minute are correct — skip the update entirely
+        match.home_team_name = home_name
+        match.away_team_name = away_name
+        match.home_team_id   = home_country.id if home_country else None
+        match.away_team_id   = away_country.id if away_country else None
+        match.stage          = stage
+        match.group_name     = group_letter
+        match.status         = new_status
+        match.kickoff        = kickoff
+        match.last_updated   = datetime.utcnow()
+
+        # On a regression the existing live data is correct — skip all updates
         if not is_regression:
             if home_score is not None:
                 match.home_score = home_score
@@ -196,12 +224,7 @@ def _sync_matches(api_matches: list) -> None:
             api_minute = m.get('minute')
             if api_minute is not None:
                 match.minute = api_minute
-        match.stage           = stage
-        match.group_name      = group_letter
-        match.status          = new_status
-        match.kickoff         = kickoff
-        match.last_updated    = datetime.utcnow()
-        match.goals_json      = json.dumps(goals) if goals else None
-        match.bookings_json   = json.dumps(bookings) if bookings else None
+            match.goals_json    = json.dumps(goals) if goals else None
+            match.bookings_json = json.dumps(bookings) if bookings else None
 
     db.session.commit()

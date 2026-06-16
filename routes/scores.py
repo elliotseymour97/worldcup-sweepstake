@@ -1,28 +1,15 @@
-import threading
 from collections import defaultdict
 from datetime import date
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template
 from sqlalchemy.orm import joinedload
 from models import Match, Country
-from api_client import fetch_and_sync, get_last_fetch
+from api_client import get_last_fetch
 from points import STAGE_LABELS
 
 scores_bp = Blueprint('scores', __name__)
 
 
-def _trigger_sync():
-    app = current_app._get_current_object()
-    def _run():
-        try:
-            with app.app_context():
-                fetch_and_sync()
-        except Exception:
-            pass
-    threading.Thread(target=_run, daemon=True).start()
-
-
 def _grouped_matches():
-    _trigger_sync()
     all_matches = Match.query.options(
         joinedload(Match.home_country).joinedload(Country.player),
         joinedload(Match.away_country).joinedload(Country.player),

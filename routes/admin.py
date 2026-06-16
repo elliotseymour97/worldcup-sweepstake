@@ -3,7 +3,7 @@ from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, session, current_app)
 from models import db, Player, Country
 from draw import run_draw
-from api_client import fetch_and_sync
+from api_client import fetch_and_sync, get_last_fetch, get_last_error
 from routes.main import invalidate_standings_cache
 
 admin_bp = Blueprint('admin', __name__)
@@ -43,7 +43,8 @@ def logout():
 def admin():
     players = Player.query.all()
     draw_done = Player.query.count() == 6
-    return render_template('admin.html', players=players, draw_done=draw_done)
+    return render_template('admin.html', players=players, draw_done=draw_done,
+                           last_sync=get_last_fetch(), sync_error=get_last_error())
 
 
 @admin_bp.route('/admin/draw', methods=['POST'])
