@@ -1,12 +1,15 @@
 {% macro team_cell(country, team_name, winning, active) %}
-  <div class="text-center">
+  <div class="text-center {% if active and winning == false %}opacity-40{% endif %}">
     <div class="flex items-center justify-center gap-1.5">
+      {% if active and winning == true %}
+      <span class="text-emerald-400 text-xs font-bold flex-shrink-0">✓</span>
+      {% endif %}
       {% if country %}
       <img src="{{ flag_url(country.code) }}" class="w-5 h-3.5 rounded-sm object-cover flex-shrink-0" alt="" loading="lazy">
       {% endif %}
       <span class="font-semibold text-sm
         {% if active %}
-          {% if winning == true %}text-white{% elif winning == false %}text-gray-500{% else %}text-gray-200{% endif %}
+          {% if winning == true %}text-white{% else %}text-gray-200{% endif %}
         {% else %}
           text-gray-200
         {% endif %}">
@@ -94,27 +97,28 @@
     </div>
   </div>
 
-  {% if is_live and (match.goals or match.red_cards) %}
+  {% if (is_live or is_finished) and (match.goals or match.red_cards) %}
+  {% set event_text = 'text-gray-300' if is_live else 'text-gray-500' %}
   <div class="border-t border-gray-800 mt-2 pt-2 grid grid-cols-2 gap-x-4 text-xs">
     <div class="space-y-0.5">
       {% for g in match.goals if g.is_home %}
-      <div class="text-gray-300">
-        <span class="text-gray-500">{{ g.minute }}'</span>
-        {{ g.scorer }}{% if g.type == 'OWN_GOAL' %} <span class="text-red-400">(OG)</span>{% elif g.type == 'PENALTY' %} <span class="text-gray-500">(P)</span>{% endif %}
+      <div class="{{ event_text }}">
+        <span class="text-gray-600">{{ g.minute }}'</span>
+        {{ g.scorer }}{% if g.type == 'OWN_GOAL' %} <span class="text-red-400">(OG)</span>{% elif g.type == 'PENALTY' %} <span class="text-gray-600">(P)</span>{% endif %}
       </div>
       {% endfor %}
       {% for c in match.red_cards if c.is_home %}
-      <div class="text-red-400"><span class="text-gray-500">{{ c.minute }}'</span> {{ c.player }} <span class="text-xs">(RC)</span></div>
+      <div class="text-red-400/70"><span class="text-gray-600">{{ c.minute }}'</span> {{ c.player }} <span>(RC)</span></div>
       {% endfor %}
     </div>
     <div class="space-y-0.5 text-right">
       {% for g in match.goals if not g.is_home %}
-      <div class="text-gray-300">
-        {% if g.type == 'OWN_GOAL' %}<span class="text-red-400">(OG)</span> {% elif g.type == 'PENALTY' %}<span class="text-gray-500">(P)</span> {% endif %}{{ g.scorer }} <span class="text-gray-500">{{ g.minute }}'</span>
+      <div class="{{ event_text }}">
+        {% if g.type == 'OWN_GOAL' %}<span class="text-red-400">(OG)</span> {% elif g.type == 'PENALTY' %}<span class="text-gray-600">(P)</span> {% endif %}{{ g.scorer }} <span class="text-gray-600">{{ g.minute }}'</span>
       </div>
       {% endfor %}
       {% for c in match.red_cards if not c.is_home %}
-      <div class="text-red-400"><span class="text-xs">(RC)</span> {{ c.player }} <span class="text-gray-500">{{ c.minute }}'</span></div>
+      <div class="text-red-400/70"><span>(RC)</span> {{ c.player }} <span class="text-gray-600">{{ c.minute }}'</span></div>
       {% endfor %}
     </div>
   </div>
@@ -185,7 +189,7 @@
 
 {# ── Results ── #}
 {% if results %}
-<section>
+<section id="results">
   <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">Results</h2>
   <div class="space-y-2">
     {% for m in results[:30] %}{{ match_card(m) }}{% endfor %}

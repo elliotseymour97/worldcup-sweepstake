@@ -5,6 +5,10 @@
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-3xl font-bold">Match Scores</h1>
   <div class="flex items-center gap-3">
+    <a href="#results"
+      class="text-xs px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors">
+      Results ↓
+    </a>
     <button hx-get="/scores/live" hx-target="#match-data" hx-swap="innerHTML"
       onclick="_startRefreshCountdown()"
       class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-700 transition-colors">
