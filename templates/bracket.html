@@ -52,7 +52,8 @@
           {% elif m.home_team_name %}
           <div class="text-xs text-gray-500 italic leading-tight">{{ m.home_team_name }}</div>
           {% else %}
-          <div class="text-xs text-gray-700 italic">TBD</div>
+          {% set lbl = bracket_labels.get(m.api_id) %}
+          <div class="text-xs {% if lbl %}text-gray-400{% else %}text-gray-700{% endif %} italic leading-tight">{{ lbl[0] if lbl else 'TBD' }}</div>
           {% endif %}
         </div>
 
@@ -94,7 +95,8 @@
           {% elif m.away_team_name %}
           <div class="text-xs text-gray-500 italic leading-tight">{{ m.away_team_name }}</div>
           {% else %}
-          <div class="text-xs text-gray-700 italic">TBD</div>
+          {% set lbl = bracket_labels.get(m.api_id) %}
+          <div class="text-xs {% if lbl %}text-gray-400{% else %}text-gray-700{% endif %} italic leading-tight">{{ lbl[1] if lbl else 'TBD' }}</div>
           {% endif %}
         </div>
 

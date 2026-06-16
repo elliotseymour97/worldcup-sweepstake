@@ -214,6 +214,7 @@ def groups():
 
 @main_bp.route('/bracket')
 def bracket():
+    from bracket_labels import BRACKET_LABELS
     matches_by_stage = {}
     for stage in KNOCKOUT_STAGES:
         stage_matches = Match.query.filter_by(stage=stage).options(
@@ -226,4 +227,5 @@ def bracket():
     return render_template('bracket.html',
                            matches_by_stage=matches_by_stage,
                            stage_labels=STAGE_LABELS,
-                           knockout_stages=KNOCKOUT_STAGES)
+                           knockout_stages=KNOCKOUT_STAGES,
+                           bracket_labels=BRACKET_LABELS)
