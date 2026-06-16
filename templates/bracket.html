@@ -34,15 +34,21 @@
 
         {# Home team #}
         <div class="flex-1 text-center">
+          {% if m.home_country %}
           <div class="font-semibold text-sm
             {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-500' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
-            {{ m.home_country.name if m.home_country else m.home_team_name or 'TBD' }}
+            {{ m.home_country.name }}
           </div>
-          {% if m.home_country and m.home_country.player %}
+          {% if m.home_country.player %}
           <div class="flex items-center justify-center gap-1 mt-1">
             <span class="tier-badge-{{ m.home_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.home_country.multiplier }}</span>
             <span class="text-xs text-gray-500">{{ m.home_country.player.name }}</span>
           </div>
+          {% endif %}
+          {% elif m.home_team_name %}
+          <div class="text-xs text-gray-500 italic leading-tight">{{ m.home_team_name }}</div>
+          {% else %}
+          <div class="text-xs text-gray-700">TBD</div>
           {% endif %}
         </div>
 
@@ -65,15 +71,21 @@
 
         {# Away team #}
         <div class="flex-1 text-center">
+          {% if m.away_country %}
           <div class="font-semibold text-sm
             {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-500' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
-            {{ m.away_country.name if m.away_country else m.away_team_name or 'TBD' }}
+            {{ m.away_country.name }}
           </div>
-          {% if m.away_country and m.away_country.player %}
+          {% if m.away_country.player %}
           <div class="flex items-center justify-center gap-1 mt-1">
             <span class="tier-badge-{{ m.away_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.away_country.multiplier }}</span>
             <span class="text-xs text-gray-500">{{ m.away_country.player.name }}</span>
           </div>
+          {% endif %}
+          {% elif m.away_team_name %}
+          <div class="text-xs text-gray-500 italic leading-tight">{{ m.away_team_name }}</div>
+          {% else %}
+          <div class="text-xs text-gray-700">TBD</div>
           {% endif %}
         </div>
 
