@@ -65,7 +65,26 @@
     }
   }
 
+  function _confetti() {
+    const colours = ['#34d399','#f59e0b','#f43f5e','#3b82f6','#8b5cf6','#06b6d4','#fbbf24'];
+    for (let i = 0; i < 36; i++) {
+      const el = document.createElement('div');
+      const c  = colours[i % colours.length];
+      const sz = 6 + Math.random() * 8;
+      const rect = Math.random() > 0.5;
+      el.style.cssText = `position:fixed;top:-10px;left:${10+Math.random()*80}vw;width:${sz}px;height:${rect?sz*0.5:sz}px;background:${c};border-radius:${rect?'2px':'50%'};pointer-events:none;z-index:9998;`;
+      document.body.appendChild(el);
+      const tx = (Math.random()-0.5)*200, ty = 200+Math.random()*350, rot = (Math.random()-0.5)*720;
+      el.animate(
+        [{transform:'translate(0,0) rotate(0deg)',opacity:1},
+         {transform:`translate(${tx}px,${ty}px) rotate(${rot}deg)`,opacity:0}],
+        {duration:900+Math.random()*600, easing:'cubic-bezier(.22,.61,.36,1)', fill:'forwards'}
+      ).onfinish = () => el.remove();
+    }
+  }
+
   function _sendAlert(body) {
+    _confetti();
     showToast('⚽ Goal! ' + body);
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('⚽ Goal!', { body: body, icon: '/static/icon.svg' });

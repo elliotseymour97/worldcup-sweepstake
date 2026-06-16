@@ -202,8 +202,25 @@
 {% endif %}
 
 {% if not live and not today_matches and not upcoming_by_date and not results %}
-<div class="text-center py-16 text-gray-500">
-  <p class="text-lg mb-1">Syncing match data...</p>
-  <p class="text-sm">This refreshes automatically. If it stays empty, check the API key in <a href="/admin" class="text-emerald-400 hover:underline">Admin</a>.</p>
+<div class="space-y-2 animate-pulse" aria-label="Loading matches…">
+  {% for _ in range(4) %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+    <div class="flex items-center gap-3">
+      <div class="flex-1 flex items-center justify-end gap-2">
+        <div class="h-3 rounded bg-gray-800" style="width:{{ loop.index * 13 + 32 }}px"></div>
+        <div class="h-3.5 w-5 rounded-sm bg-gray-800"></div>
+      </div>
+      <div class="w-32 flex flex-col items-center gap-1.5">
+        <div class="h-5 w-14 rounded bg-gray-800"></div>
+        <div class="h-2.5 w-10 rounded bg-gray-800"></div>
+      </div>
+      <div class="flex-1 flex items-center gap-2">
+        <div class="h-3.5 w-5 rounded-sm bg-gray-800"></div>
+        <div class="h-3 rounded bg-gray-800" style="width:{{ (loop.index * 17 + 28) % 80 + 24 }}px"></div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
+<p class="text-xs text-gray-700 text-center mt-4">Syncing match data — if this persists check the <a href="/admin" class="hover:text-gray-500">API key</a>.</p>
 {% endif %}

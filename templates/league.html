@@ -5,11 +5,14 @@
 <div class="flex justify-between items-center mb-1">
   <h1 class="text-3xl font-bold">League Table</h1>
   <div class="flex items-center gap-2">
+    <button onclick="_shareStandings()"
+      class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-700 transition-colors">
+      Share
+    </button>
     <button hx-get="/league/standings" hx-target="#standings-data" hx-swap="innerHTML"
       class="text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-700 transition-colors">
-      ↻ Refresh
+      ↻
     </button>
-    <span class="text-gray-600 text-xs">Auto-refreshes every 30s</span>
   </div>
 </div>
 <p class="text-gray-500 text-sm mb-8">Points → Goal difference → Furthest stage reached</p>
@@ -21,4 +24,25 @@
   {% include '_standings_partial.html' %}
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function _shareStandings() {
+    const rows = document.querySelectorAll('#standings-data tbody tr');
+    if (!rows.length) { showToast('No standings to share yet.', 2500); return; }
+    const medals = ['🥇','🥈','🥉'];
+    const lines  = ['⚽ LM Sweep 2026 Standings\n'];
+    rows.forEach((row, i) => {
+      const name = row.querySelector('td:nth-child(2) a')?.textContent?.trim() || '?';
+      const pts  = row.querySelector('td:nth-child(10) span')?.textContent?.trim() || '0';
+      lines.push(`${medals[i] !== undefined ? medals[i] : (i + 1) + '.'} ${name} — ${pts} pts`);
+    });
+    lines.push('\n' + window.location.origin);
+    navigator.clipboard.writeText(lines.join('\n')).then(
+      () => showToast('Standings copied — paste into WhatsApp 📋', 3500),
+      () => showToast('Copy failed, try again', 2500)
+    );
+  }
+</script>
 {% endblock %}
