@@ -57,9 +57,9 @@ def get_last_error() -> Optional[str]:
 
 
 def fetch_and_sync() -> tuple[bool, str]:
-    """Public entry point used by the admin manual refresh. Respects the 30-s throttle."""
+    """Public entry point used by the admin manual refresh. Respects a 15-s throttle."""
     now = datetime.utcnow()
-    if _last_fetch and (now - _last_fetch) < timedelta(seconds=30):
+    if _last_fetch and (now - _last_fetch) < timedelta(seconds=15):
         secs = int((now - _last_fetch).total_seconds())
         return True, f'Data is fresh (last synced {secs}s ago).'
     return _do_sync()

@@ -66,19 +66,23 @@ def create_app(test_config=None):
 
 
 def _start_sync_worker(app):
-    """Start a single background thread that syncs from the API every 30 seconds.
-    This replaces per-request background threads, which had race conditions and
-    silent failures with no visibility into errors."""
+    """Background sync thread. Polls every 15 s while matches are live, 60 s otherwise.
+    Faster live cadence reduces goal/status lag without exceeding the free-tier rate limit."""
     def _worker():
         time.sleep(5)  # let the app finish starting up
         while True:
+            live_count = 0
             try:
                 with app.app_context():
                     from api_client import _do_sync
                     _do_sync()
+                    from models import Match
+                    live_count = Match.query.filter(
+                        Match.status.in_(['IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'])
+                    ).count()
             except Exception:
                 pass
-            time.sleep(30)
+            time.sleep(15 if live_count > 0 else 60)
     t = threading.Thread(target=_worker, daemon=True, name='api-sync')
     t.start()
 
