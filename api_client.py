@@ -91,10 +91,10 @@ def _do_sync() -> tuple[bool, str]:
             return False, _last_error
 
         matches = data.get('matches', [])
-        _sync_matches(matches)
+        finished_now = _sync_matches(matches)
 
         try:
-            _maybe_snapshot()
+            _maybe_snapshot(force=finished_now)
         except Exception:
             pass
 
@@ -115,7 +115,11 @@ def _do_sync() -> tuple[bool, str]:
         _sync_lock.release()
 
 
-def _maybe_snapshot() -> None:
+def _maybe_snapshot(force: bool = False) -> None:
+    """Record a standings snapshot for the history chart. To keep that chart
+    readable, only do this when a match has just finished (`force=True`) or
+    it's been at least a day since the last point — not on every live-score
+    tick, which would plot a new point after every goal (or penalty)."""
     from models import StandingsSnapshot, db
     from points import player_standings
     from sqlalchemy import func
@@ -132,6 +136,8 @@ def _maybe_snapshot() -> None:
                 for s in StandingsSnapshot.query.filter_by(taken_at=last_time).all()}
         if last == current:
             return
+        if not force and (datetime.utcnow() - last_time) < timedelta(days=1):
+            return
 
     now = datetime.utcnow()
     for row in standings:
@@ -144,7 +150,11 @@ def _maybe_snapshot() -> None:
     db.session.commit()
 
 
-def _sync_matches(api_matches: list) -> None:
+def _sync_matches(api_matches: list) -> bool:
+    """Sync matches from the API into the DB. Returns True if any match
+    transitioned to FINISHED during this sync (used to force a standings
+    snapshot for the history chart)."""
+    any_finished = False
     for m in api_matches:
         api_id    = m.get('id')
         home_name = m.get('homeTeam', {}).get('name') or ''
@@ -204,6 +214,8 @@ def _sync_matches(api_matches: list) -> None:
             (match.status == 'FINISHED' and status in _live)
         )
         new_status = match.status if is_regression else status
+        if match.status != 'FINISHED' and new_status == 'FINISHED':
+            any_finished = True
 
         match.home_team_name = home_name
         match.away_team_name = away_name
@@ -228,3 +240,4 @@ def _sync_matches(api_matches: list) -> None:
             match.bookings_json = json.dumps(bookings) if bookings else None
 
     db.session.commit()
+    return any_finished
