@@ -2,112 +2,119 @@
 {% block title %}Bracket – LM Sweepstake 2026{% endblock %}
 {% block content %}
 
-<h1 class="text-3xl font-bold mb-8">Knockout Bracket</h1>
+{% macro match_card(m) %}
+{% set is_finished = m.status == 'FINISHED' %}
+{% set is_live = m.status in ('IN_PLAY', 'PAUSED', 'EXTRA_TIME', 'PENALTY_SHOOTOUT') %}
+{% set has_score = m.home_score is not none and m.away_score is not none %}
+{% set home_wins = has_score and m.home_score > m.away_score %}
+{% set away_wins = has_score and m.away_score > m.home_score %}
+<div class="w-full rounded-lg border text-xs overflow-hidden
+  {% if is_live %}card-live border-emerald-500 bg-gray-900
+  {% elif is_finished %}border-gray-700/60 bg-gray-900/50
+  {% else %}border-gray-800 bg-gray-900{% endif %}">
+  {% for is_home in (true, false) %}
+  {% set country = m.home_country if is_home else m.away_country %}
+  {% set team_name = m.home_team_name if is_home else m.away_team_name %}
+  {% set score = m.home_score if is_home else m.away_score %}
+  {% set wins = home_wins if is_home else away_wins %}
+  {% set lbl = bracket_labels.get(m.api_id) %}
+  <div class="flex items-center justify-between gap-1.5 px-2 py-1
+    {% if not loop.last %}border-b border-gray-800/70{% endif %}
+    {% if is_finished and has_score and not wins %}opacity-40{% endif %}">
+    <div class="min-w-0 flex-1">
+      {% if country %}
+      <div class="flex items-center gap-1">
+        <span class="truncate font-semibold {{ 'text-white' if (is_finished or is_live) and wins else 'text-gray-200' }}">{{ country.name }}</span>
+        {% if is_finished and wins %}<span class="text-emerald-400 font-bold flex-shrink-0">✓</span>{% endif %}
+      </div>
+      {% if country.player %}
+      <div class="flex items-center gap-1">
+        <span class="tier-badge-{{ country.tier }} text-[10px] font-bold px-1 rounded leading-tight">×{{ country.multiplier }}</span>
+        <span class="text-[10px] text-gray-500 truncate">{{ country.player.name }}</span>
+      </div>
+      {% endif %}
+      {% elif team_name %}
+      <div class="text-gray-500 italic truncate">{{ team_name }}</div>
+      {% else %}
+      <div class="{% if lbl %}text-gray-400{% else %}text-gray-700{% endif %} italic truncate leading-tight">
+        {{ (lbl[0] if is_home else lbl[1]) if lbl else 'TBD' }}
+      </div>
+      {% endif %}
+    </div>
+    <div class="flex-shrink-0 font-bold tabular-nums {{ 'text-emerald-400' if is_live else 'text-gray-100' }}">
+      {% if has_score %}{{ score }}{% elif is_live %}-{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  <div class="px-2 py-0.5 bg-black/20 text-center text-[10px]">
+    {% if is_live %}
+    <span class="text-red-400 font-bold animate-pulse">LIVE{% if m.minute %} {{ m.minute }}'{% endif %}</span>
+    {% elif is_finished %}
+    <span class="text-gray-600">FT{% if m.kickoff %} · {{ m.kickoff.strftime('%d %b') }}{% endif %}</span>
+    {% elif m.kickoff %}
+    <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-gray-500">{{ m.kickoff.strftime('%d %b %H:%M') }}</time>
+    {% else %}
+    <span class="text-gray-700">TBC</span>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+<h1 class="text-3xl font-bold mb-1">Knockout Bracket</h1>
 
 {% if matches_by_stage %}
+{% set bh = 1120 %}
+<p class="text-xs text-gray-500 mb-6">Scroll sideways to follow the path to the final →</p>
 
-{% for stage in knockout_stages %}
-{% if stage in matches_by_stage %}
-{% set matches = matches_by_stage[stage] %}
-
-<section class="mb-10">
-  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-    {% if stage == 'FINAL' %}
-    <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-    {% else %}
-    <span class="w-2 h-2 rounded-full bg-gray-600 inline-block"></span>
-    {% endif %}
-    {{ stage_labels.get(stage, stage) }}
-  </h2>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ '1' if stage == 'FINAL' else '2' if stage in ('SEMI_FINALS','THIRD_PLACE') else '2' }} gap-2">
-    {% for m in matches %}
-    {% set is_finished = m.status == 'FINISHED' %}
-    {% set is_live = m.status in ('IN_PLAY', 'PAUSED') %}
-    {% set has_score = m.home_score is not none and m.away_score is not none %}
-    {% set home_wins = has_score and m.home_score > m.away_score %}
-    {% set away_wins = has_score and m.away_score > m.home_score %}
-
-    <div class="border rounded-xl px-4 py-3
-      {% if is_live %}card-live border-emerald-500 bg-gray-900
-      {% elif is_finished %}border-gray-700/60 bg-gray-900/50
-      {% else %}border-gray-800 bg-gray-900{% endif %}">
-      <div class="flex items-center gap-3">
-
-        {# Home team #}
-        <div class="flex-1 text-center {% if is_finished and away_wins %}opacity-40{% endif %}">
-          {% if m.home_country %}
-          <div class="flex items-center justify-center gap-1 mb-0.5">
-            {% if is_finished and home_wins %}<span class="text-emerald-400 text-xs font-bold">✓</span>{% endif %}
-            <span class="font-semibold text-sm {{ 'text-white' if (is_finished or is_live) and home_wins else 'text-gray-200' }}">
-              {{ m.home_country.name }}
-            </span>
-          </div>
-          {% if m.home_country.player %}
-          <div class="flex items-center justify-center gap-1">
-            <span class="tier-badge-{{ m.home_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.home_country.multiplier }}</span>
-            <span class="text-xs text-gray-500">{{ m.home_country.player.name }}</span>
-          </div>
-          {% endif %}
-          {% elif m.home_team_name %}
-          <div class="text-xs text-gray-500 italic leading-tight">{{ m.home_team_name }}</div>
-          {% else %}
-          {% set lbl = bracket_labels.get(m.api_id) %}
-          <div class="text-xs {% if lbl %}text-gray-400{% else %}text-gray-700{% endif %} italic leading-tight">{{ lbl[0] if lbl else 'TBD' }}</div>
-          {% endif %}
+<div class="overflow-x-auto pb-4 -mx-4 px-4">
+  <div class="flex items-start min-w-max">
+    {% for stage in bracket_main_stages %}
+    {% if stage in matches_by_stage %}
+    {% set matches = matches_by_stage[stage] %}
+    <div class="flex flex-col flex-shrink-0" style="width:184px;">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center justify-center gap-1.5 h-5">
+        {% if stage == 'FINAL' %}<span class="text-amber-400">🏆</span>{% endif %}
+        {{ stage_labels.get(stage, stage) }}
+      </h2>
+      <div class="relative w-full" style="height:{{ bh }}px;">
+        {% for m in matches %}
+        <div class="absolute left-0 right-0" style="top:{{ positions[stage][loop.index0] }}%; transform:translateY(-50%);">
+          {{ match_card(m) }}
         </div>
-
-        {# Score / time #}
-        <div class="w-28 text-center flex flex-col items-center flex-shrink-0">
-          {% if is_live %}
-          <div class="text-2xl font-bold text-emerald-400 tabular-nums score-num">{{ m.home_score }}–{{ m.away_score }}</div>
-          <span class="mt-0.5 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
-          {% elif is_finished %}
-          <div class="text-xl font-bold text-gray-100 tabular-nums score-num">{{ m.home_score }}–{{ m.away_score }}</div>
-          <span class="text-xs text-gray-600 font-medium">FT</span>
-          {% if m.kickoff %}
-          <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-xs text-gray-700 mt-0.5">{{ m.kickoff.strftime('%d %b') }}</time>
-          {% endif %}
-          {% elif m.kickoff %}
-          <time data-utc="{{ m.kickoff.strftime('%Y-%m-%dT%H:%M:%S') }}Z" class="text-sm text-gray-400">
-            {{ m.kickoff.strftime('%d %b %H:%M') }}
-          </time>
-          {% else %}
-          <div class="text-sm text-gray-600">TBC</div>
-          {% endif %}
-        </div>
-
-        {# Away team #}
-        <div class="flex-1 text-center {% if is_finished and home_wins %}opacity-40{% endif %}">
-          {% if m.away_country %}
-          <div class="flex items-center justify-center gap-1 mb-0.5">
-            <span class="font-semibold text-sm {{ 'text-white' if (is_finished or is_live) and away_wins else 'text-gray-200' }}">
-              {{ m.away_country.name }}
-            </span>
-            {% if is_finished and away_wins %}<span class="text-emerald-400 text-xs font-bold">✓</span>{% endif %}
-          </div>
-          {% if m.away_country.player %}
-          <div class="flex items-center justify-center gap-1">
-            <span class="tier-badge-{{ m.away_country.tier }} text-xs font-bold px-1 py-0.5 rounded">×{{ m.away_country.multiplier }}</span>
-            <span class="text-xs text-gray-500">{{ m.away_country.player.name }}</span>
-          </div>
-          {% endif %}
-          {% elif m.away_team_name %}
-          <div class="text-xs text-gray-500 italic leading-tight">{{ m.away_team_name }}</div>
-          {% else %}
-          {% set lbl = bracket_labels.get(m.api_id) %}
-          <div class="text-xs {% if lbl %}text-gray-400{% else %}text-gray-700{% endif %} italic leading-tight">{{ lbl[1] if lbl else 'TBD' }}</div>
-          {% endif %}
-        </div>
-
+        {% endfor %}
       </div>
     </div>
+
+    {% set stage_idx = bracket_main_stages.index(stage) %}
+    {% if stage_idx + 1 < bracket_main_stages|length %}
+    {% set next_stage = bracket_main_stages[stage_idx + 1] %}
+    {% if next_stage in connectors %}
+    <div class="relative flex-shrink-0" style="width:28px; height:{{ bh }}px; margin-top:32px;">
+      {% for c in connectors[next_stage] %}
+      <div class="absolute left-0 w-1/2 border-t-2 border-gray-700" style="top:{{ c.top1 }}%;"></div>
+      <div class="absolute left-0 w-1/2 border-t-2 border-gray-700" style="top:{{ c.top2 }}%;"></div>
+      <div class="absolute border-r-2 border-gray-700" style="left:50%; top:{{ c.top1 }}%; height:{{ c.top2 - c.top1 }}%;"></div>
+      <div class="absolute right-0 w-1/2 border-t-2 border-gray-700" style="top:{{ c.mid }}%;"></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
     {% endfor %}
   </div>
-</section>
+</div>
 
+{% if 'THIRD_PLACE' in matches_by_stage %}
+<section class="mt-10 max-w-xs">
+  <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-gray-600 inline-block"></span>
+    {{ stage_labels.get('THIRD_PLACE', 'Third Place') }}
+  </h2>
+  {% for m in matches_by_stage['THIRD_PLACE'] %}
+  {{ match_card(m) }}
+  {% endfor %}
+</section>
 {% endif %}
-{% endfor %}
 
 {% else %}
 <div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">

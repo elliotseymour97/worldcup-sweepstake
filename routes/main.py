@@ -215,6 +215,8 @@ def groups():
 @main_bp.route('/bracket')
 def bracket():
     from bracket_labels import BRACKET_LABELS
+    from bracket_structure import BRACKET_ORDER, BRACKET_MAIN_STAGES, slot_positions
+
     matches_by_stage = {}
     for stage in KNOCKOUT_STAGES:
         stage_matches = Match.query.filter_by(stage=stage).options(
@@ -222,10 +224,38 @@ def bracket():
             joinedload(Match.away_country).joinedload(Country.player),
         ).order_by(Match.kickoff.asc()).all()
         if stage_matches:
+            order = BRACKET_ORDER.get(stage, [])
+            stage_matches.sort(
+                key=lambda m: order.index(m.api_id) if m.api_id in order else len(order))
             matches_by_stage[stage] = stage_matches
+
+    # Vertical center (% of column height) for each match, so the template can
+    # place it with absolute positioning and have pairs line up between rounds.
+    positions = {
+        stage: slot_positions(len(matches_by_stage[stage]))
+        for stage in BRACKET_MAIN_STAGES if stage in matches_by_stage
+    }
+
+    # Connector lines between each pair of adjacent rounds: for every match in
+    # the later round, the vertical spans of the two earlier-round matches that
+    # feed it, plus its own center (they meet at the same %, see slot_positions).
+    connectors = {}
+    for stage_a, stage_b in zip(BRACKET_MAIN_STAGES, BRACKET_MAIN_STAGES[1:]):
+        pos_a = positions.get(stage_a)
+        pos_b = positions.get(stage_b)
+        if not pos_a or not pos_b:
+            continue
+        connectors[stage_b] = [
+            {'top1': pos_a[2 * j], 'top2': pos_a[2 * j + 1], 'mid': pos_b[j]}
+            for j in range(len(pos_b))
+            if 2 * j + 1 < len(pos_a)
+        ]
 
     return render_template('bracket.html',
                            matches_by_stage=matches_by_stage,
                            stage_labels=STAGE_LABELS,
                            knockout_stages=KNOCKOUT_STAGES,
-                           bracket_labels=BRACKET_LABELS)
+                           bracket_labels=BRACKET_LABELS,
+                           bracket_main_stages=BRACKET_MAIN_STAGES,
+                           positions=positions,
+                           connectors=connectors)
