@@ -4,25 +4,27 @@
 # visual — this table is what lets the /bracket UI nest each round's matches
 # under the correct pair from the round before it.
 #
-# Order derived from FIFA's official match-number wiring (M73-M104):
-#   R16  M89=W(M73,M74)  M90=W(M75,M76)  M91=W(M79,M80)  M92=W(M81,M82)
-#        M93=W(M77,M78)  M94=W(M83,M84)  M95=W(M85,M86)  M96=W(M87,M88)
-#   QF   M97=W(M89,M90)  M98=W(M93,M94)  M99=W(M91,M92)  M100=W(M95,M96)
-#   SF   M101=W(M97,M98) M102=W(M99,M100)
-#   3rd  M103=Loser(M101,M102)   Final  M104=W(M101,M102)
-# The api_id <-> M-number mapping for Round of 32 matches the match-number
-# comments already in bracket_labels.py.
+# Round of 32 order: an earlier version of this table was built from a
+# FIFA match-number wiring (M73-M104) sourced via web lookup, which turned
+# out to be wrong for this competition's actual api_ids. It's since been
+# rebuilt from ground truth: once the first 10 Round of 32 matches had real
+# results, every one of them showed the SAME simple rule — feeder pairs are
+# just consecutive api_ids (537415+537416, 537417+537418, 537419+537420, ...).
+# e.g. 537417 (SA v Canada) and 537418 (Netherlands v Morocco) both feed
+# 537376 (Canada v Morocco) in Round of 16 — confirmed against real results.
+# The remaining 3 pairs (537419/420, 537427/428, 537429/430, all still
+# unplayed) are placed by matching their kickoff order to the Round of 16
+# slot order below; revisit once those Round of 32 matches finish.
 #
-# Round of 16 / QF / SF order below was cross-checked against this app's own
+# Round of 16 / QF / SF order was cross-checked against this app's own
 # kickoff timestamps (dates/times line up exactly, in a non-chronological
-# sequence that only makes sense as bracket-tree order) rather than derived
-# from FIFA match numbers directly, since those aren't recorded anywhere.
+# sequence that only makes sense as bracket-tree order).
 BRACKET_ORDER = {
     'LAST_32': [
-        537417, 537415, 537418, 537423,
-        537416, 537424, 537419, 537420,
-        537425, 537426, 537421, 537422,
-        537429, 537427, 537430, 537428,
+        537417, 537418, 537415, 537416,
+        537421, 537422, 537419, 537420,
+        537423, 537424, 537425, 537426,
+        537429, 537430, 537427, 537428,
     ],
     'LAST_16': [537376, 537375, 537380, 537379, 537377, 537378, 537382, 537381],
     'QUARTER_FINALS': [537383, 537384, 537385, 537386],
