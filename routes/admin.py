@@ -3,7 +3,7 @@ from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, session, current_app)
 from models import db, Player, Country
 from draw import run_draw
-from api_client import fetch_and_sync, get_last_fetch, get_last_error
+from api_client import fetch_and_sync, get_last_fetch, get_last_error, cleanup_standings_history
 from routes.main import invalidate_standings_cache
 
 admin_bp = Blueprint('admin', __name__)
@@ -65,6 +65,14 @@ def do_draw():
 def refresh_data():
     ok, msg = fetch_and_sync()
     flash(msg, 'success' if ok else 'error')
+    return redirect(url_for('admin.admin'))
+
+
+@admin_bp.route('/admin/cleanup-history', methods=['POST'])
+@_require_auth
+def cleanup_history():
+    msg = cleanup_standings_history()
+    flash(msg, 'success')
     return redirect(url_for('admin.admin'))
 
 

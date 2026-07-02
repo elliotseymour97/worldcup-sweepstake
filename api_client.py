@@ -150,6 +150,31 @@ def _maybe_snapshot(force: bool = False) -> None:
     db.session.commit()
 
 
+def cleanup_standings_history() -> str:
+    """Retroactively collapse standings-snapshot history down to one point per
+    day (keeping each day's last snapshot, plus the very first one ever),
+    undoing the old behaviour of snapshotting on every live-score tick."""
+    from models import StandingsSnapshot, db
+
+    snapshots = StandingsSnapshot.query.order_by(StandingsSnapshot.taken_at.asc()).all()
+    if not snapshots:
+        return 'No history to clean up.'
+
+    times = sorted({s.taken_at for s in snapshots})
+    if len(times) <= 1:
+        return 'Nothing to clean up — only one snapshot exists.'
+
+    last_per_day = {}
+    for t in times:
+        last_per_day[t.date()] = t
+    keep = {times[0]} | set(last_per_day.values())
+
+    removed = StandingsSnapshot.query.filter(
+        ~StandingsSnapshot.taken_at.in_(keep)).delete(synchronize_session=False)
+    db.session.commit()
+    return f'Removed {removed} snapshot rows, kept {len(keep)} history points.'
+
+
 def _sync_matches(api_matches: list) -> bool:
     """Sync matches from the API into the DB. Returns True if any match
     transitioned to FINISHED during this sync (used to force a standings
